@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino Data Table</title>
+    <script>
+        async function sendData(id) {
+            const row = document.querySelector(`tr[data-id='${id}']`);
+            const name = row.querySelector(".name").innerText;
+            const value = row.querySelector(".value input").value;
+
+            const data = {
+                name: name,
+                value: value.toString()
+            };
+
+            const response = await fetch("/update", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (response.ok) {
+                alert(`Dato enviado correctamente: ${name} = ${value}`);
+            } else {
+                alert(`Error al enviar el dato: ${name}`);
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Smart City</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Valor</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            <tr data-id="{{ item.id }}">
+                <td class="id">{{ item.id }}</td>
+                <td class="name">{{ item.name }}</td>
+                <td class="value"><input type="text" value="{{ item.value }}"></td>
+                <td><button onclick="sendData({{ item.id }})">Enviar</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>
