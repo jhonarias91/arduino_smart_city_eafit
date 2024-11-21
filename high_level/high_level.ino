@@ -8,7 +8,6 @@
 #define LG2 27   // Green traffic light 2 connected in pin 27
 #define P1 37    //Crosswalk pulser
 #define CNY2 34  // Infrared sensor 2 in traffic light 1 connected in pin 34 (middle)
-#define CO2 A2  // CO2 sensor connected in pin A3
 
 //Middle level
 #define CNY1 35  // Infrared sensor 1 in traffic light 1 connected in pin 35
@@ -22,41 +21,51 @@
 //End middle level
 
 //Constants
-const int ORIGINAL_GREEN1_TIME = 500;
-int originalGreen2Time = 2000;
 
-const int STATE_LIGHT1_GREEN_ON_START = 0;
-const int STATE_LIGHT2_GREEN_ON = 4;
-const int STATE_LIGHT_NIGHT_MODE = 8;
-const int STATE_LIGHT_RED1_ON = 3;
+// States of the finite state machine (FSM)
+const int STATE_LIGHT1_GREEN_ON_START = 0;  // Traffic light 1 green light on at start
+const int STATE_LIGHT1_GREEN_BLINK = 1;     // Traffic light 1 green light blinking
+const int STATE_LIGHT1_YELLOW_ON = 2;       // Traffic light 1 yellow light on
+const int STATE_LIGHT_RED1_ON = 3;          // Traffic light 1 red light on
+const int STATE_LIGHT2_GREEN_ON = 4;        // Traffic light 2 green light on
+const int STATE_LIGHT2_GREEN_BLINK = 5;     // Traffic light 2 green light blinking
+const int STATE_LIGHT2_YELLOW_ON = 6;       // Traffic light 2 yellow light on
+const int STATE_LIGHT_NIGHT_MODE = 7;       // Night mode where light 2 has the priority
+
 
 const int LIGHT2_INCREASE_WHEN3_SENSORS = 2000;
 const int LIGHT2_INCREASE_WHEN2_SENSORS = 1000;
 const int ALL_SENSORS_ACTIVE = 3;
 const int TWO_SENSORS_ACTIVE = 2;
-const int LAST_SENSOR_TIME_CHECKER = 1000;
+const int LAST_SENSOR_TIME_CHECKER = 10;
+
+int originalGreen2Time = 2000;  //No as a contast to be able to change using serial
+int originalGreen1Time =2000;
 
 unsigned long timeStamp = 0;
 int state = 0;
 
-long greenTime1 = ORIGINAL_GREEN1_TIME;
+long greenTime1 = originalGreen1Time;
 long yellowTime = 500;
 long greenTime2 = originalGreen2Time;
 int blinks = 0;
 long blinkTime = 100;
 long totalBlinksInOut = 6;
 //Pedestrian 1 pulser control
-const int PEDESTRIAN_CROSS_TIME = 12000;
+const int PEDESTRIAN_CROSS_TIME = 10000;
 int vP1 = 0;
 bool p1IsCrossing = false;
 unsigned long p1TimeStamp = 0;
 bool pedestrian1WaitingForRedStatus = false;  //When the P1 = HIGH, need to wait until light is green again.
+unsigned int pedestrianReduceGreenTime1 = 3000;
 
 //Infrared CNY2, when detect some car it increase the greentime, must that this is too short
 bool ligh1DetectCar = false;
 int greenLight1TimeWhenCar = 3000;
 bool ligh1CarIsCrossing = true;
 bool CNY2WaitinForGreenStatus = false;  //When the P1 = HIGH, need to wait until light is green again.
+int previousState = -1;                 // To ligh1 previous state
+int previousStateLight2 = -1;                 // To ligh2 previous state
 
 //Middle level
 int lightGreen1TimeWhen3Sensors = 4000;
@@ -86,6 +95,7 @@ const int lightSensorsCheckTime = 2000;  //Check the night sensor LDR every x ti
 unsigned long lightSensorTimeStamp = 0;  //The timer after the last ligh (night) sensor check
 unsigned long nightTimeStampCheck;
 unsigned long lastSensorTimeChecked;  //To verify the sensors every x time
+unsigned long lastSensorTimeChecked2;  //To verify the sensors every x time
 bool nightMode = false;
 
 //### Sensors on Light2 ###
@@ -99,22 +109,17 @@ int lastLight1TotalSensors = 0;
 const int originalTotalTimesWhenLight1Priority = 3;  // Total cycles with increased green time
 int totalTimesWhenLight1Priority = originalTotalTimesWhenLight1Priority;
 
-long unsigned lastPriorityTimeOnLight1 = 0;           // Last time Light 1 had priority
-long unsigned priorityWaitingTimeOnLight1 = 7000;     // Time to wait before giving priority again
+long unsigned lastPriorityTimeOnLight1 = 0;        // Last time Light 1 had priority
+long unsigned priorityWaitingTimeOnLight1 = 3000;  // Time to wait before giving priority again
 long unsigned light1PriorityTimeStamp = 0;
 
-int lightGreen1IncreaseWhenSensors = 2000;            // Additional green time when sensors are active
-int originalGreen1Time = ORIGINAL_GREEN1_TIME;        // Store the original green time for Light 1
+int lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when sensors are active
 
 //#### End sensors light 2 ###
 
 LiquidCrystal_I2C display(0x27, 20, 4);
 
-//CO2
-float co2GreenTime2 = 10;
-
 void setup() {
-
   long unsigned currrTime = millis();
   // Output pin config
   pinMode(LR1, OUTPUT);  // Red traffic light 1 as Output
@@ -133,7 +138,6 @@ void setup() {
   pinMode(CNY6, INPUT);
   pinMode(LDR1, INPUT);
   pinMode(LDR2, INPUT);
-  pinMode(CO2, INPUT);
 
   display.init();
   display.backlight();
@@ -147,8 +151,6 @@ void setup() {
 }
 
 void loop() {
-  //Serial.println();
-  getTimeForCO2Sensor();
   trafficLightFSM();
   setPedestrian1Pulser();
   checkForLigh1ActiveSensors();
@@ -156,27 +158,30 @@ void loop() {
   checkNighMode();
   readSerial();
 }
+
 void readSerial() {
-  static String received = "";  
+  static String received = "";
 
   while (Serial.available() > 0) {
-    char ch = Serial.read(); //Serial just allow us to read one char 
-    if (ch == '\n') {         
+    char ch = Serial.read();  //Serial just allow us to read one char
+    if (ch == '\n') {
       int separatorIndex = received.indexOf(':');
       if (separatorIndex != -1) {
         String idStr = received.substring(0, separatorIndex);      //key
-        String valueStr = received.substring(separatorIndex + 1); // value
+        String valueStr = received.substring(separatorIndex + 1);  // value
         int value = valueStr.toInt();
 
         // Compare the keys and assign the values
         if (idStr.equalsIgnoreCase("greenTime1")) {
           greenTime1 = value;
+          originalGreen1Time = greenTime1;  //useful when we change the greenTime for some request and then assign the same value
         } else if (idStr.equalsIgnoreCase("greenTime2")) {
           greenTime2 = value;
+          originalGreen2Time = greenTime2;
         } else if (idStr.equalsIgnoreCase("yellowTime")) {
           yellowTime = value;
-        } 
-        // Show the value 
+        }
+        // Show the value
         display.setCursor(0, 3);
         display.print("                    ");  // Clean the display
         display.setCursor(0, 3);
@@ -184,15 +189,14 @@ void readSerial() {
 
         received = "";  // Clean the buffer to receive again a new word
       } else {
-        //Invalid format        
-        received = "";  
+        //Invalid format
+        received = "";
       }
     } else {
       received += ch;  // Save values on the tmp buffer
     }
   }
 }
-
 
 void checkNighMode() {
   nightTimeStampCheck = millis();
@@ -202,15 +206,15 @@ void checkNighMode() {
     //If nothing is trying to request alter over the lights, we can change to night mode
     vLDR2 = analogRead(LDR2);
     vLDR1 = analogRead(LDR1);
-
     //Enter night mode, check both sensors to resilience and avoid mistakes
-    if (vLDR2 < 100 && vLDR1 < 100) {
+    if (vLDR2 < 60 && vLDR1 < 60) {
       nightMode = true;
     } else {
       nightMode = false;
     }
   }
 }
+
 void checkForLigh1ActiveSensors() {
   unsigned long currTime = millis();
 
@@ -225,10 +229,9 @@ void checkForLigh1ActiveSensors() {
     int totalSensors = 3 - (vCNY1 + vCNY2 + vCNY3);
 
     // Check if 2 or 3 sensors are active and priority is not already set
-    if ((totalSensors == ALL_SENSORS_ACTIVE || totalSensors == TWO_SENSORS_ACTIVE) &&
-        !light1IsPriority && !light1WaitingForGreenStatus &&
-        currTime - lastPriorityTimeOnLight1 > priorityWaitingTimeOnLight1) {
+    if (totalSensors > 0 && !light1IsPriority && !light1WaitingForGreenStatus && currTime - lastPriorityTimeOnLight1 > priorityWaitingTimeOnLight1) {
 
+      nightMode = false;
       light1WaitingForGreenStatus = true;
       lastLight1TotalSensors = totalSensors;
       isExternalRequestingLights = true;
@@ -254,58 +257,47 @@ void checkForLigh1ActiveSensors() {
   }
 
   // Decrease the priority cycle count after the green phase
-  if (light1IsPriority && ((currTime - light1PriorityTimeStamp) > 
-      (greenTime1 + yellowTime * 2 + greenTime1 + (blinkTime * totalBlinksInOut)))) {
+  //  if (!p1IsCrossing && light1IsPriority && ((currTime - light1PriorityTimeStamp) > (greenTime1 + yellowTime * 2 + greenTime1 + (blinkTime * totalBlinksInOut)))) {
+  if (light1IsPriority && previousState == STATE_LIGHT1_GREEN_ON_START && state != STATE_LIGHT1_GREEN_ON_START) {
     totalTimesWhenLight1Priority--;
-    light1PriorityTimeStamp = currTime;
-    display.setCursor(17, 1);
-    display.print(totalTimesWhenLight1Priority);
+    if (totalTimesWhenLight1Priority <= 0) {
+      // Reset priority flags and times
+      totalTimesWhenLight1Priority = originalTotalTimesWhenLight1Priority;
+      light1IsPriority = false;
+      isExternalRequestingLights = false;
+      lastPriorityTimeOnLight1 = currTime;
+      greenTime1 = originalGreen1Time;
+      display.setCursor(0, 1);
+      display.print("                    ");  // Clear the display line
+    }
   }
-
-  // Reset to normal operation after priority cycles are completed
-  if (totalTimesWhenLight1Priority <= 0 && light1IsPriority) {
-    totalTimesWhenLight1Priority = originalTotalTimesWhenLight1Priority;
-    light1IsPriority = false;
-    isExternalRequestingLights = false;
-    lastPriorityTimeOnLight1 = currTime;
-    greenTime1 = originalGreen1Time;
-    display.setCursor(0, 1);
-    display.print("                    ");  // Clear the display line
-  }
+  previousState = state;
 }
 
-
-/*
-Middle: Detect the total of infrared on the light 2 are active.
-CNY4, CNY5, CNY6
-Then give priority with higher time for several times for this light
-*/
 void checkForLigh2ActiveSensors() {
 
-  long unsigned currTime = millis();
+  unsigned long currTime = millis();
 
   if (currTime - lastSensorTimeChecked > LAST_SENSOR_TIME_CHECKER && !isExternalRequestingLights) {
     lastSensorTimeChecked = currTime;
     vCNY4 = digitalRead(CNY4);
     vCNY5 = digitalRead(CNY5);
     vCNY6 = digitalRead(CNY6);
-    // When the infrared sensor detects 0, it means a car is present.
-    // totalSensors = 0 (3 sensors active), = 1 (2 sensors active), = 3 (0 active).
+
     int totalSensors = 3 - (vCNY4 + vCNY5 + vCNY6);
-    //3 active sensors
-    if ((totalSensors == ALL_SENSORS_ACTIVE || totalSensors == TWO_SENSORS_ACTIVE) && !light2IsPriority && !light2WaitingForGreenStatus
+    
+
+    if (totalSensors > 0 && !light2IsPriority && !light2WaitingForGreenStatus
         && currTime - lastPriorityTimeOnLight2 > priorityWaitingTimeOnLight2) {
-      //Active this flag until the light2 green is active again
+
       light2WaitingForGreenStatus = true;
-      //Save the total sensors to then adjust the total time.
       lastLight2TotalSensors = totalSensors;
       isExternalRequestingLights = true;
-      totalTimesWhenLight1Priority = totalSensors;
+      totalTimesWhenLight2Priority = totalSensors;
     }
   }
 
   if (light2WaitingForGreenStatus) {
-    //Wait until traffi2 is on green (state = STATE_LIGHT2_GREEN_ON)
     if (state == STATE_LIGHT2_GREEN_ON) {
       light2PriorityTimeSTamp = currTime;
       light2IsPriority = true;
@@ -319,144 +311,38 @@ void checkForLigh2ActiveSensors() {
       display.print(totalTimesWhenLight2Priority);
     }
   }
-
-  //After the light 2 reach the green again decrease the total times
-  if (light2IsPriority && ((currTime - light2PriorityTimeSTamp) > (greenTime2 + yellowTime * 2 + greenTime2 + (blinkTime * totalBlinksInOut)))) {
-    //To ensure greenTime2 be active on this mode several times.
+  //Check if the light change
+  bool checkStateChange = previousStateLight2 == STATE_LIGHT2_GREEN_ON && state != STATE_LIGHT2_GREEN_ON;
+  if (light2IsPriority && checkStateChange) {
     totalTimesWhenLight2Priority--;
-    light2PriorityTimeSTamp = currTime;
-    display.setCursor(17, 1);
-    display.print(totalTimesWhenLight2Priority);
+
+    if (totalTimesWhenLight2Priority <= 0) {
+      totalTimesWhenLight2Priority = originalTotalTimesWhenLight2Priority;
+      light2IsPriority = false;
+      isExternalRequestingLights = false;
+      lastPriorityTimeOnLight2 = currTime;
+      greenTime2 = originalGreen2Time;
+      display.setCursor(0, 1);
+      display.print("                  ");
+    }
   }
-
-  if (totalTimesWhenLight2Priority <= 0 && light2IsPriority) {
-    totalTimesWhenLight2Priority = originalTotalTimesWhenLight2Priority;
-    light2IsPriority = false;
-    isExternalRequestingLights = false;
-    lastPriorityTimeOnLight2 = currTime;
-    greenTime2 = originalGreen2Time;
-    display.setCursor(0, 1);
-    display.print("                  ");
-  }
-}
-
-void trafficLightFSM() {
-
-  switch (state) {
-    case STATE_LIGHT1_GREEN_ON_START:
-
-      digitalWrite(LG1, HIGH);
-      digitalWrite(LR2, HIGH);
-      digitalWrite(LY2, LOW);
-      digitalWrite(LR1, LOW);
-      digitalWrite(LY1, LOW);
-      digitalWrite(LG2, LOW);
-      if (millis() - timeStamp >= greenTime1) {
-        state = 1;
-        timeStamp = millis();
-      }
-      break;
-
-    case 1:  //green blink
-
-      if (millis() - timeStamp > blinkTime) {
-        digitalWrite(LG1, !digitalRead(LG1));
-        blinks++;
-        timeStamp = millis();
-      }
-      if (blinks > totalBlinksInOut) {
-        blinks = 0;
-        state = 2;
-        timeStamp = millis();
-      }
-      break;
-    case 2:  //Yellow1 On
-      digitalWrite(LY1, HIGH);
-      digitalWrite(LG1, LOW);
-      if (millis() - timeStamp > yellowTime) {
-        state = STATE_LIGHT_RED1_ON;  //check for 3
-        timeStamp = millis();
-      }
-      break;
-    case STATE_LIGHT_RED1_ON:
-      digitalWrite(LR1, HIGH);
-      digitalWrite(LY1, LOW);
-      digitalWrite(LG1, LOW);
-      digitalWrite(LY2, HIGH);
-      digitalWrite(LG2, LOW);
-      digitalWrite(LR2, LOW);
-
-      if (millis() - timeStamp > yellowTime) {
-        state = STATE_LIGHT2_GREEN_ON;
-        timeStamp = millis();
-      }
-      break;
-    case STATE_LIGHT2_GREEN_ON:  //Green2 on
-      digitalWrite(LY2, LOW);
-      digitalWrite(LG2, HIGH);
-      if (millis() - timeStamp > greenTime2) {
-        if (nightMode) {
-          state = STATE_LIGHT_NIGHT_MODE;  //Slowly move to nightMode
-        } else {
-          state = 5;
-        }
-        timeStamp = millis();
-      }
-      break;
-    case 5:  //Blink Green2
-      if (millis() - timeStamp > blinkTime) {
-        blinks++;
-        timeStamp = millis();
-        digitalWrite(LG2, !digitalRead(LG2));
-      }
-
-      if (blinks > totalBlinksInOut) {
-        blinks = 0;
-        timeStamp = millis();
-        state = 6;
-      }
-      break;
-    case 6:
-      digitalWrite(LG2, LOW);
-      digitalWrite(LY2, HIGH);
-      if (millis() - timeStamp > yellowTime) {
-        state = 7;
-        timeStamp = millis();
-      }
-      break;
-    case 7:  //Red2 On
-      digitalWrite(LR2, HIGH);
-      digitalWrite(LY1, HIGH);
-
-      digitalWrite(LR1, LOW);
-      digitalWrite(LY2, LOW);
-      if (millis() - timeStamp > yellowTime) {
-        state = STATE_LIGHT1_GREEN_ON_START;
-        timeStamp = millis();
-      }
-      break;
-    case STATE_LIGHT_NIGHT_MODE:
-      digitalWrite(LG2, HIGH);
-      digitalWrite(LY2, LOW);
-      digitalWrite(LR2, LOW);
-
-      digitalWrite(LG1, LOW);
-      digitalWrite(LY1, LOW);
-      digitalWrite(LR1, HIGH);
-      if (!nightMode) {
-        state = STATE_LIGHT2_GREEN_ON;  //Send to and state similar to this to avoid chrashes
-      }
-  }
+  previousStateLight2 = state;//Update the previous state with current
 }
 
 void setPedestrian1Pulser() {
 
   vP1 = digitalRead(P1);
-  if (!p1IsCrossing) {
+  if (!p1IsCrossing) { //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
     if (vP1 == HIGH) {
-      nightMode = false;
       pedestrian1WaitingForRedStatus = true;
       isExternalRequestingLights = true;
+
+      //remaining time
+      unsigned long remainingGreenTime1 = greenTime1 - (millis() - timeStamp);
+      if (remainingGreenTime1 > pedestrianReduceGreenTime1) {
+        //Decrease the time for the pedestrian to cross
+        greenTime1 = pedestrianReduceGreenTime1;
+      }
     }
   }
 
@@ -464,49 +350,137 @@ void setPedestrian1Pulser() {
     //Need to wait L1 to reach Red ON again -> status (0)
     p1TimeStamp = millis();
     p1IsCrossing = true;
-    greenTime2 = PEDESTRIAN_CROSS_TIME;  //Increase the the other Light Green
+    originalGreen2Time = greenTime2;
+    greenTime2 = greenTime2 + PEDESTRIAN_CROSS_TIME;  //Increase the the other Light Green
     pedestrian1WaitingForRedStatus = false;
     display.setCursor(0, 0);
     display.print("Pedestrian1 crossing");
   }
 
   //After the time had been reach, we set the original time again
-  if (p1IsCrossing && (millis() - p1TimeStamp > PEDESTRIAN_CROSS_TIME)) {
+  if (p1IsCrossing && (millis() - p1TimeStamp > (greenTime2 + blinkTime * blinks + yellowTime))) {
     p1IsCrossing = false;
     greenTime2 = originalGreen2Time;
+    //Set the greentime1 to the original value after the pedestrian has crossed
+    greenTime1 = originalGreen1Time;
+
     isExternalRequestingLights = false;
     display.setCursor(0, 0);
     display.print("                    ");
   }
 }
 
+void trafficLightFSM() {
+  switch (state) {
+    case STATE_LIGHT1_GREEN_ON_START:
+      // Turn on green light for traffic light 1 and red for traffic light 2
+      digitalWrite(LG1, HIGH);
+      digitalWrite(LR2, HIGH);
+      digitalWrite(LY2, LOW);
+      digitalWrite(LR1, LOW);
+      digitalWrite(LY1, LOW);
+      digitalWrite(LG2, LOW);
 
-const float DC_GAIN = 8.5;                                                               // define the DC gain of amplifier CO2 sensor
-//const float ZERO_POINT_VOLTAGE = 0.265;                                                  // define the output of the sensor in volts when the concentration of CO2 is 400PPM
-const float ZERO_POINT_VOLTAGE= 0.0576;
-//const float ZERO_POINT_VOLTAGE = 0.22;                                                  // define the output of the sensor in volts when the concentration of CO2 is 400PPM
-//const float REACTION_VOLTAGE = 0.03;                                                    // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
-const float REACTION_VOLTAGE = 0.059;                                                    // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
-const float CO2Curve[3] = {2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.602 - 3))}; // Line curve with 2 points
+      // Transition to blinking green light after greenTime1
+      if (millis() - timeStamp >= greenTime1) {
+        state = STATE_LIGHT1_GREEN_BLINK;
+        timeStamp = millis();
+      }
+      break;
 
-// Variable definitions
-float volts = 0;  // Variable to store current voltage from CO2 sensor
-float co2 = 0;    // Variable to store CO2 value
-int vCO2 = 0;
-float dCO2 = 0;
+    case STATE_LIGHT1_GREEN_BLINK:
+      // Blink green light for traffic light 1
+      if (millis() - timeStamp > blinkTime) {
+        digitalWrite(LG1, !digitalRead(LG1));
+        blinks++;
+        timeStamp = millis();
+      }
 
-int getTimeForCO2Sensor(){
-  dCO2 = 0;
-  volts = analogRead(CO2) * 5.0 / 1023.0;
-  if (volts / DC_GAIN >= ZERO_POINT_VOLTAGE)
-  {
-    dCO2 = 400;
+      // Transition to yellow light after total blinks
+      if (blinks > totalBlinksInOut) {
+        blinks = 0;
+        state = STATE_LIGHT1_YELLOW_ON;
+        timeStamp = millis();
+      }
+      break;
+
+    case STATE_LIGHT1_YELLOW_ON:
+      // Turn on yellow light for traffic light 1
+      digitalWrite(LY1, HIGH);
+      digitalWrite(LG1, LOW);
+
+      // Transition to red light for traffic light 1
+      if (millis() - timeStamp > yellowTime) {
+        state = STATE_LIGHT_RED1_ON;
+        timeStamp = millis();
+      }
+      break;
+
+    case STATE_LIGHT_RED1_ON:
+      // Turn on red light for traffic light 1 and yellow for traffic light 2
+      digitalWrite(LR1, HIGH);
+      digitalWrite(LY1, LOW);
+      digitalWrite(LY2, HIGH);
+      digitalWrite(LG2, LOW);
+      digitalWrite(LR2, LOW);
+
+      // Transition to green light for traffic light 2
+      if (millis() - timeStamp > yellowTime) {
+        state = STATE_LIGHT2_GREEN_ON;
+        timeStamp = millis();
+      }
+      break;
+
+    case STATE_LIGHT2_GREEN_ON:
+      // Turn on green light for traffic light 2
+      digitalWrite(LY2, LOW);
+      digitalWrite(LG2, HIGH);
+
+      // Transition to blinking green light or night mode
+      if (millis() - timeStamp > greenTime2) {
+        state = nightMode ? STATE_LIGHT_NIGHT_MODE : STATE_LIGHT2_GREEN_BLINK;
+        timeStamp = millis();
+      }
+      break;
+
+    case STATE_LIGHT2_GREEN_BLINK:
+      // Blink green light for traffic light 2
+      if (millis() - timeStamp > blinkTime) {
+        blinks++;
+        timeStamp = millis();
+        digitalWrite(LG2, !digitalRead(LG2));
+      }
+
+      // Transition to yellow light after total blinks
+      if (blinks > totalBlinksInOut) {
+        blinks = 0;
+        state = STATE_LIGHT2_YELLOW_ON;
+        timeStamp = millis();
+      }
+      break;
+
+    case STATE_LIGHT2_YELLOW_ON:
+      // Turn on yellow light for traffic light 2
+      digitalWrite(LG2, LOW);
+      digitalWrite(LY2, HIGH);
+
+      // Transition directly to the start of the cycle
+      if (millis() - timeStamp > yellowTime) {
+        state = STATE_LIGHT1_GREEN_ON_START;
+        timeStamp = millis();
+      }
+      break;
+
+    case STATE_LIGHT_NIGHT_MODE:
+      // Alternate blinking for night mode
+      digitalWrite(LG2, HIGH);
+      digitalWrite(LR1, HIGH);
+
+      if (!nightMode) {
+        state = STATE_LIGHT2_GREEN_ON; // Return to normal operation
+      }
+      break;
   }
-  else
-  {
-    dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]) + 2000; //todo: check calibration
-    // return pow(10, ((volts/DC_GAIN)-pcurve[1])/pcurve[2]+pcurve[0]);
-  }
-  Serial.println(dCO2);
-  return co2GreenTime2 * dCO2 / 10000;
 }
+
+
