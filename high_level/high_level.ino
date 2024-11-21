@@ -69,7 +69,6 @@ int previousState = -1;                 // To ligh1 previous state
 int previousStateLight2 = -1;           // To ligh2 previous state
 
 //Middle level
-int lightGreen1TimeWhen3Sensors = 4000;
 //Additional time when 3 sensors are active.
 int lightGreen2IncreaseWhenSensors = 2000;
 int totalTimesWhenLight2Priority = 3; //This will be the amount of sensors
@@ -131,6 +130,7 @@ const float CO2Curve[3] = { 2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.60
 float volts = 0;  // Variable to store current voltage from CO2 sensor
 float co2 = 0;    // Variable to store CO2 value
 float dCO2 = 0;
+unsigned co2GreenTime2 = 20;
 //End CO2
 
 void setup() {
@@ -213,8 +213,6 @@ void readSerial() {
           totalBlinksInOut = value;
         } else if (idStr.equalsIgnoreCase("pedestrianReduceGreenTime1")) {
           pedestrianReduceGreenTime1 = value;
-        } else if (idStr.equalsIgnoreCase("lightGreen1TimeWhen3Sensors")) {
-          lightGreen1TimeWhen3Sensors = value;
         } else if (idStr.equalsIgnoreCase("lightGreen2IncreaseWhenSensors")) {
           lightGreen2IncreaseWhenSensors = value;
         } else if (idStr.equalsIgnoreCase("priorityWaitingTimeOnLight2")) {
@@ -229,8 +227,10 @@ void readSerial() {
           greenLight1TimeWhenCar = value;
         }  else if (idStr.equalsIgnoreCase("pedestrianCrossTime")) {
           pedestrianCrossTime = value;
+        } else if (idStr.equalsIgnoreCase("co2GreenTime2")) {
+          co2GreenTime2 = value;
         } 
-
+        
         // Show the value
         display.setCursor(0, 3);
         display.print("                    ");  // Clean the display
@@ -304,7 +304,7 @@ void checkForLigh1ActiveSensors() {
       light1IsPriority = true;
       light1WaitingForGreenStatus = false;
       originalGreen1Time = greenTime1;
-      greenTime1 += lightGreen1IncreaseWhenSensors;
+      greenTime1 += lightGreen1IncreaseWhenSensors + getTimeForCO2Sensor();
 
       display.setCursor(0, 1);
       display.print("Prio ");
@@ -360,7 +360,7 @@ void checkForLigh2ActiveSensors() {
       light2IsPriority = true;
       light2WaitingForGreenStatus = false;
       originalGreen2Time = greenTime2;
-      greenTime2 = greenTime2 + lightGreen2IncreaseWhenSensors;
+      greenTime2 = greenTime2 + lightGreen2IncreaseWhenSensors + getTimeForCO2Sensor();;
       display.setCursor(0, 1);
       display.print("Prio ");
       display.print(lastLight2TotalSensors);
@@ -529,6 +529,20 @@ void showGreenTimes() {
   }
 }
 
+
+int getTimeForCO2Sensor(){
+  dCO2 = 0;
+  volts = analogRead(CO2) * 5.0 / 1023.0;
+  if (volts / DC_GAIN >= ZERO_POINT_VOLTAGE)
+  {
+    dCO2 = 400;
+  }
+  else
+  {
+    dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
+  }
+  return co2GreenTime2 * dCO2 / 10000;
+}
 
 void trafficLightFSM() {
   switch (state) {

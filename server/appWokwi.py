@@ -16,7 +16,7 @@ def get_serial_connection():
 
 @app.route("/")
 def index():
-    # Datos iniciales, TODO: Leer desde Arduino
+    # Initial data, TODO: Read from Arduino
     data = [
     {"id": 1, "name": "greenTime1", "value": "2000"},
     {"id": 2, "name": "greenTime2", "value": "4000"},
@@ -25,13 +25,14 @@ def index():
     {"id": 5, "name": "totalBlinksInOut", "value": "6"},
     {"id": 6, "name": "pedestrianCrossTime", "value": "10000"},
     {"id": 7, "name": "pedestrianReduceGreenTime1", "value": "3000"},
-    {"id": 8, "name": "lightGreen1TimeWhen3Sensors", "value": "4000"},
+    {"id": 8, "name": "co2GreenTime2", "value": "20000"},
     {"id": 9, "name": "lightGreen2IncreaseWhenSensors", "value": "2000"},    
     {"id": 10, "name": "priorityWaitingTimeOnLight2", "value": "7000"},
     {"id": 11, "name": "priorityWaitingTimeOnLight1", "value": "3000"},
     {"id": 12, "name": "lightGreen1IncreaseWhenSensors", "value": "2000"},    
     {"id": 13, "name": "displayRefreshTimeAfterNotification", "value": "4000"},
     {"id": 14, "name": "greenLight1TimeWhenCar", "value": "3000"},
+    
 ]
     return render_template("index.html", data=data)
 

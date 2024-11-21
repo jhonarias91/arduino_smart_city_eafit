@@ -119,13 +119,15 @@ la maqueta.
 | 5   | totalBlinksInOut                  | 6      | Número total de parpadeos durante el ciclo de luz verde intermitente.                           |
 | 6   | pedestrianCrossTime               | 10000  | Tiempo asignado en milisegundos para el cruce de peatones.                                       |
 | 7   | pedestrianReduceGreenTime1        | 3000   | Reducción del tiempo de la luz verde 1 para permitir el cruce de peatones.                      |
-| 8   | lightGreen1TimeWhen3Sensors       | 4000   | Tiempo adicional para la luz verde 1 cuando 3 sensores están activos.                           |
-| 9   | lightGreen2IncreaseWhenSensors    | 2000   | Incremento del tiempo para la luz verde 2 cuando sensores detectan actividad.                   |
+| 8  | co2GreenTime2                      | 20000   | Tiempo asignado para la luz verde 2 variable según el nivel de CO2.                              |
+algún sensores está activo.                           |
+| 9   | lightGreen2IncreaseWhenSensors    | 2000   | Incremento del tiempo para la luz verde 2 cuando algún sensor detecta actividad.                   |
 | 10  | priorityWaitingTimeOnLight2       | 7000   | Tiempo de espera en milisegundos antes de dar prioridad nuevamente a la luz 2.                  |
 | 11  | priorityWaitingTimeOnLight1       | 3000   | Tiempo de espera en milisegundos antes de dar prioridad nuevamente a la luz 1.                  |
 | 12  | lightGreen1IncreaseWhenSensors    | 2000   | Incremento del tiempo para la luz verde 1 cuando sensores detectan actividad.                   |
 | 13  | displayRefreshTimeAfterNotification | 4000 | Tiempo de refresco en milisegundos del display después de mostrar una notificación.             |
 | 14  | greenLight1TimeWhenCar            | 3000   | Tiempo asignado para la luz verde 1 cuando se detecta un vehículo.                              |
+
 
 
 
