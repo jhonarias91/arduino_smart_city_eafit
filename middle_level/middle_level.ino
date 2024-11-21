@@ -17,6 +17,7 @@
 #define CNY6 30  // Infrared sensor 6 in traffic light 2 connected in pin 30
 #define LDR1 A0  // LDR Light sensor from traffic light 1 connected in pin A0
 #define LDR2 A1  // LDR Light sensor from traffic light 2 connected in pin A1
+#define CO2 A2  // CO2 sensor connected in pin A3
 
 //End middle level
 
@@ -31,7 +32,6 @@ const int STATE_LIGHT2_GREEN_ON = 4;        // Traffic light 2 green light on
 const int STATE_LIGHT2_GREEN_BLINK = 5;     // Traffic light 2 green light blinking
 const int STATE_LIGHT2_YELLOW_ON = 6;       // Traffic light 2 yellow light on
 const int STATE_LIGHT_NIGHT_MODE = 7;       // Night mode where light 2 has the priority
-
 
 const int LIGHT2_INCREASE_WHEN3_SENSORS = 2000;
 const int LIGHT2_INCREASE_WHEN2_SENSORS = 1000;
@@ -54,6 +54,7 @@ long totalBlinksInOut = 6;
 //Pedestrian 1 pulser control
 const int PEDESTRIAN_CROSS_TIME = 10000;
 int vP1 = 0;
+int vP2 = 0;
 bool p1IsCrossing = false;
 unsigned long p1TimeStamp = 0;
 bool pedestrian1WaitingForRedStatus = false;  //When the P1 = HIGH, need to wait until light is green again.
@@ -117,10 +118,25 @@ int lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when sensor
 
 //#### End sensors light 2 ###
 
+int unsigned displayRefreshTime = 2000;
+int unsigned displayRefreshTimeStamp ;
+
 LiquidCrystal_I2C display(0x27, 20, 4);
 
+//CO2
+int vCO2 = 0;
+const float DC_GAIN = 8.5;                                                               // define the DC gain of amplifier CO2 sensor
+const float ZERO_POINT_VOLTAGE = 0.265;                                                  // define the output of the sensor in volts when the concentration of CO2 is 400PPM
+const float REACTION_VOLTAGE = 0.059;                                                    // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
+const float CO2Curve[3] = {2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.602 - 3))}; // Line curve with 2 points
+
+float volts = 0;  // Variable to store current voltage from CO2 sensor
+float co2 = 0;    // Variable to store CO2 value
+float dCO2 = 0;
+//End CO2
+
 void setup() {
-  long unsigned currrTime = millis();
+  long unsigned currTime = millis();
   // Output pin config
   pinMode(LR1, OUTPUT);  // Red traffic light 1 as Output
   pinMode(LY1, OUTPUT);  // Yellow traffic light 1 as Output
@@ -138,16 +154,18 @@ void setup() {
   pinMode(CNY6, INPUT);
   pinMode(LDR1, INPUT);
   pinMode(LDR2, INPUT);
+  pinMode(CO2, INPUT);
 
   display.init();
   display.backlight();
-  timeStamp = currrTime;
+  timeStamp = currTime;
   Serial.begin(9600);
-  lightSensorTimeStamp = currrTime;
+  lightSensorTimeStamp = currTime;
   light2IsPriority = false;
   nightMode = false;
   lastPriorityTimeOnLight2 = 0;
-  lastSensorTimeChecked = currrTime;
+  lastSensorTimeChecked = currTime;
+  displayRefreshTimeStamp = currTime;
 }
 
 void loop() {
@@ -157,6 +175,15 @@ void loop() {
   checkForLigh2ActiveSensors();
   checkNighMode();
   readSerial();
+  showData();
+}
+
+void showData(){
+  int timeMark = millis();
+  if (timeMark - displayRefreshTimeStamp > displayRefreshTime){
+    displayRefreshTimeStamp = timeMark;
+    showDataInDisplay();
+  }
 }
 
 void readSerial() {
@@ -369,6 +396,58 @@ void setPedestrian1Pulser() {
     display.print("                    ");
   }
 }
+
+void readAllData()
+{
+  vLDR1 = analogRead(LDR1);
+  vLDR2 = analogRead(LDR2);
+  vCO2 = analogRead(CO2);
+  dCO2 = 0;
+  volts = analogRead(CO2) * 5.0 / 1023.0;
+  if (volts / DC_GAIN >= ZERO_POINT_VOLTAGE) {
+    dCO2 = 400;
+  } else {
+    dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
+  }
+  
+  vCNY1 = digitalRead(CNY1);
+  vCNY2 = digitalRead(CNY2);
+  vCNY3 = digitalRead(CNY3);
+  vCNY4 = digitalRead(CNY4);
+  vCNY5 = digitalRead(CNY5);
+  vCNY6 = digitalRead(CNY6);
+}
+ 
+void showDataInDisplay() {
+  readAllData();
+  display.setCursor(0, 0);
+  display.print("LDR1       CNY 1 2 3");
+  display.setCursor(0, 1);
+  display.print("LDR2               ");
+  display.setCursor(0, 2);
+  display.print("CO2        CNY 4 5 6");
+  display.setCursor(0, 3);
+  display.print("L1   L2            ");
+  display.setCursor(5, 0); display.print(vLDR1);
+  display.setCursor(5, 1); display.print(vLDR2);
+  display.setCursor(5, 2); display.print(vCO2);
+
+  unsigned long remainingGreenTime1 = (greenTime1 - (millis() - timeStamp))/1000;
+  unsigned long remainingGreenTime2 = (greenTime2 - (millis() - timeStamp))/1000;
+  if (remainingGreenTime1 > 999) remainingGreenTime1 = 999; // Truncate
+  if (remainingGreenTime2 > 999) remainingGreenTime2 = 999; // Truncate
+  //Get the greenTimes
+  display.setCursor(3, 3); display.print(remainingGreenTime1%1000);
+  display.setCursor(8, 3); display.print(remainingGreenTime2%1000);
+
+  display.setCursor(15, 1); display.print(1 * vCNY1);
+  display.setCursor(17, 1); display.print(1 * vCNY2);
+  display.setCursor(19, 1); display.print(1 * vCNY3);
+  display.setCursor(15, 3); display.print(1 * vCNY4);
+  display.setCursor(17, 3); display.print(1 * vCNY5);
+  display.setCursor(19, 3); display.print(1 * vCNY6);
+}
+ 
 
 void trafficLightFSM() {
   switch (state) {

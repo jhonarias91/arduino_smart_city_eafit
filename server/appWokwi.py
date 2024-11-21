@@ -7,13 +7,8 @@ app = Flask(__name__)
 # Inicializa la conexión serial con el Arduino
 def get_serial_connection():
     try:
-        ser = serial.Serial()
-        ser.port = "COM3"
-        ser.baudrate = 9600
-        ser.timeout = 1
-        ser.dtr = False  # Set DTR False before opening to avoid reboot
-        ser.open()
-        print("Conectado al puerto COM5 a 9600 baudios.")
+        ser = serial.serial_for_url('rfc2217://localhost:4000', baudrate=9600, timeout=1)
+        print("Conectado al servidor RFC2217 en localhost:4000 a 9600 baudios.")
         return ser
     except serial.SerialException as e:
         print(f"Error al conectar al puerto serial: {e}")
@@ -21,7 +16,7 @@ def get_serial_connection():
 
 @app.route("/")
 def index():
-    # Initial data, TODO: Read from Arduino
+    # Datos iniciales, TODO: Leer desde Arduino
     data = [
         {"id": 1, "name": "greenTime1", "value": "500"},
         {"id": 2, "name": "greenTime2", "value": "200"},
@@ -31,7 +26,7 @@ def index():
 
 @app.route("/update", methods=["POST"])
 def update_value():
-    data = request.json  # Get the data from front
+    data = request.json  # Obtiene los datos del frontend
     name = data.get("name")
     value = data.get("value")
 
@@ -51,4 +46,4 @@ def update_value():
         return jsonify({"status": "error", "message": "No se pudo abrir el puerto serial"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=5001)

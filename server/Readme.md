@@ -5,9 +5,9 @@ Create enviroment
 
 `cd server`
 
-`python -m venv env`
+`python -m venv venv`
 
-`env/Scripts/activate`
+`venv/Scripts/activate`
 
 `pip install flash pyserial`
 
