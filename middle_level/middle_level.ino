@@ -118,8 +118,10 @@ int lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when sensor
 
 //#### End sensors light 2 ###
 
-int unsigned displayRefreshTime = 2000;
+int unsigned originalDisplayRefreshTime = 1000;
+int unsigned displayRefreshTime = originalDisplayRefreshTime;
 int unsigned displayRefreshTimeStamp ;
+int unsigned displayRefreshTimeAfterNotification = 4000; //Time to wait until a new notification was show
 
 LiquidCrystal_I2C display(0x27, 20, 4);
 
@@ -182,6 +184,8 @@ void showData(){
   int timeMark = millis();
   if (timeMark - displayRefreshTimeStamp > displayRefreshTime){
     displayRefreshTimeStamp = timeMark;
+    //Restablish the time to the original in case a notification was sended
+    displayRefreshTime = originalDisplayRefreshTime;
     showDataInDisplay();
   }
 }
@@ -213,7 +217,7 @@ void readSerial() {
         display.print("                    ");  // Clean the display
         display.setCursor(0, 3);
         display.print(idStr + ":" + value);
-
+        notificate();
         received = "";  // Clean the buffer to receive again a new word
       } else {
         //Invalid format
@@ -223,6 +227,14 @@ void readSerial() {
       received += ch;  // Save values on the tmp buffer
     }
   }
+}
+
+/*
+After each notification on the display, we wait this time
+*/
+void notificate(){
+  displayRefreshTimeStamp = millis();  
+  displayRefreshTime = displayRefreshTimeAfterNotification;
 }
 
 void checkNighMode() {
@@ -280,6 +292,7 @@ void checkForLigh1ActiveSensors() {
       display.print(lastLight1TotalSensors);
       display.print(" Sensors-C:");
       display.print(totalTimesWhenLight1Priority);
+      notificate();
     }
   }
 
@@ -294,8 +307,8 @@ void checkForLigh1ActiveSensors() {
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight1 = currTime;
       greenTime1 = originalGreen1Time;
-      display.setCursor(0, 1);
-      display.print("                    ");  // Clear the display line
+      //display.setCursor(0, 1); todo: check if needed with the new refresh
+      //display.print("                    ");  // Clear the display line      
     }
   }
   previousState = state;
@@ -336,6 +349,7 @@ void checkForLigh2ActiveSensors() {
       display.print(lastLight2TotalSensors);
       display.print(" Sensors-C:");
       display.print(totalTimesWhenLight2Priority);
+      notificate();
     }
   }
   //Check if the light change
@@ -349,8 +363,8 @@ void checkForLigh2ActiveSensors() {
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight2 = currTime;
       greenTime2 = originalGreen2Time;
-      display.setCursor(0, 1);
-      display.print("                  ");
+      //display.setCursor(0, 1); todo: check if needed
+      //display.print("                  ");
     }
   }
   previousStateLight2 = state;//Update the previous state with current
@@ -382,6 +396,7 @@ void setPedestrian1Pulser() {
     pedestrian1WaitingForRedStatus = false;
     display.setCursor(0, 0);
     display.print("Pedestrian1 crossing");
+    notificate();
   }
 
   //After the time had been reach, we set the original time again
@@ -392,8 +407,8 @@ void setPedestrian1Pulser() {
     greenTime1 = originalGreen1Time;
 
     isExternalRequestingLights = false;
-    display.setCursor(0, 0);
-    display.print("                    ");
+    //display.setCursor(0, 0); todo: check if needed
+    //display.print("                    ");
   }
 }
 
@@ -431,21 +446,34 @@ void showDataInDisplay() {
   display.setCursor(5, 0); display.print(vLDR1);
   display.setCursor(5, 1); display.print(vLDR2);
   display.setCursor(5, 2); display.print(vCO2);
-
-  unsigned long remainingGreenTime1 = (greenTime1 - (millis() - timeStamp))/1000;
-  unsigned long remainingGreenTime2 = (greenTime2 - (millis() - timeStamp))/1000;
-  if (remainingGreenTime1 > 999) remainingGreenTime1 = 999; // Truncate
-  if (remainingGreenTime2 > 999) remainingGreenTime2 = 999; // Truncate
-  //Get the greenTimes
-  display.setCursor(3, 3); display.print(remainingGreenTime1%1000);
-  display.setCursor(8, 3); display.print(remainingGreenTime2%1000);
-
+  showGreenTimes();
   display.setCursor(15, 1); display.print(1 * vCNY1);
   display.setCursor(17, 1); display.print(1 * vCNY2);
   display.setCursor(19, 1); display.print(1 * vCNY3);
   display.setCursor(15, 3); display.print(1 * vCNY4);
   display.setCursor(17, 3); display.print(1 * vCNY5);
   display.setCursor(19, 3); display.print(1 * vCNY6);
+}
+
+void showGreenTimes(){
+  
+  unsigned long remainingGreenTime1 = (((greenTime1 + (blinkTime * blinks)) - (millis() - timeStamp)) + 999)/1000; //Sum 999 to round up
+  unsigned long remainingGreenTime2 = (((greenTime2 + (blinkTime * blinks)) - (millis() - timeStamp)) + 999)/1000;
+  if (remainingGreenTime1 < 0 || remainingGreenTime1 > 999 ) remainingGreenTime1 = 0; // to avoid negative val
+  if (remainingGreenTime2 < 0 || remainingGreenTime2 > 999) remainingGreenTime2 = 0; 
+
+  if (state == STATE_LIGHT1_GREEN_ON_START || state == STATE_LIGHT1_GREEN_BLINK){
+      display.setCursor(3, 3); display.print(remainingGreenTime1);
+  }else{
+    display.setCursor(3, 3); display.print("  ");
+  }
+
+  if (state == STATE_LIGHT2_GREEN_ON || state == STATE_LIGHT2_GREEN_BLINK){
+      display.setCursor(8, 3); display.print(remainingGreenTime2);
+  }else{
+    display.setCursor(8, 3); display.print("  ");
+  }
+
 }
  
 
