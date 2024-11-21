@@ -176,7 +176,6 @@ void loop() {
   checkForLigh1ActiveSensors();
   checkForLigh2ActiveSensors();
   checkNighMode();
-  readSerial();
   showData();
 }
 
@@ -187,45 +186,6 @@ void showData() {
     //Restablish the time to the original in case a notification was sended
     displayRefreshTime = originalDisplayRefreshTime;
     showDataInDisplay();
-  }
-}
-
-void readSerial() {
-  static String received = "";
-
-  while (Serial.available() > 0) {
-    char ch = Serial.read();  //Serial just allow us to read one char
-    if (ch == '\n') {
-      int separatorIndex = received.indexOf(':');
-      if (separatorIndex != -1) {
-        String idStr = received.substring(0, separatorIndex);      //key
-        String valueStr = received.substring(separatorIndex + 1);  // value
-        int value = valueStr.toInt();
-
-        // Compare the keys and assign the values
-        if (idStr.equalsIgnoreCase("greenTime1")) {
-          greenTime1 = value;
-          originalGreen1Time = greenTime1;  //useful when we change the greenTime for some request and then assign the same value
-        } else if (idStr.equalsIgnoreCase("greenTime2")) {
-          greenTime2 = value;
-          originalGreen2Time = greenTime2;
-        } else if (idStr.equalsIgnoreCase("yellowTime")) {
-          yellowTime = value;
-        }
-        // Show the value
-        display.setCursor(0, 3);
-        display.print("                    ");  // Clean the display
-        display.setCursor(0, 3);
-        display.print(idStr + ":" + value);
-        notificate();
-        received = "";  // Clean the buffer to receive again a new word
-      } else {
-        //Invalid format
-        received = "";
-      }
-    } else {
-      received += ch;  // Save values on the tmp buffer
-    }
   }
 }
 
