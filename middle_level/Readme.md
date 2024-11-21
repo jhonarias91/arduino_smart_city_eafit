@@ -6,7 +6,6 @@ dinámicamente los tiempos de las luces según la detección de vehículos,
 la intensidad de la luz ambiente y las solicitudes de cruce de peatones. 
 También implementa un modo nocturno.
 
-
 ## Entradas y Salidas
 ### Entradas:
 
@@ -98,6 +97,14 @@ Después de totalBlinksInOut parpadeos.
 Después de yellowTime.
 - De STATE_LIGHT_NIGHT_MODE a STATE_LIGHT2_GREEN_ON:
 Al desactivarse el modo nocturno.
+
+# Run:
+
+Run the middle_level/wokwi/diagram.json
+
+`python server/appWokwi.py`
+
+Go to  http://127.0.0.1:5001
 
 ![maqueta Smart Weather](../resources/smart_weather.png) 
 
