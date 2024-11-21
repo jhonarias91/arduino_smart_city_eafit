@@ -17,7 +17,7 @@
 #define CNY6 30  // Infrared sensor 6 in traffic light 2 connected in pin 30
 #define LDR1 A0  // LDR Light sensor from traffic light 1 connected in pin A0
 #define LDR2 A1  // LDR Light sensor from traffic light 2 connected in pin A1
-#define CO2 A2  // CO2 sensor connected in pin A3
+#define CO2 A2   // CO2 sensor connected in pin A3
 
 //End middle level
 
@@ -40,7 +40,7 @@ const int TWO_SENSORS_ACTIVE = 2;
 const int LAST_SENSOR_TIME_CHECKER = 10;
 
 int originalGreen2Time = 2000;  //No as a contast to be able to change using serial
-int originalGreen1Time =2000;
+int originalGreen1Time = 2000;
 
 unsigned long timeStamp = 0;
 int state = 0;
@@ -66,7 +66,7 @@ int greenLight1TimeWhenCar = 3000;
 bool ligh1CarIsCrossing = true;
 bool CNY2WaitinForGreenStatus = false;  //When the P1 = HIGH, need to wait until light is green again.
 int previousState = -1;                 // To ligh1 previous state
-int previousStateLight2 = -1;                 // To ligh2 previous state
+int previousStateLight2 = -1;           // To ligh2 previous state
 
 //Middle level
 int lightGreen1TimeWhen3Sensors = 4000;
@@ -95,7 +95,7 @@ bool isExternalRequestingLights = false;
 const int lightSensorsCheckTime = 2000;  //Check the night sensor LDR every x time
 unsigned long lightSensorTimeStamp = 0;  //The timer after the last ligh (night) sensor check
 unsigned long nightTimeStampCheck;
-unsigned long lastSensorTimeChecked;  //To verify the sensors every x time
+unsigned long lastSensorTimeChecked;   //To verify the sensors every x time
 unsigned long lastSensorTimeChecked2;  //To verify the sensors every x time
 bool nightMode = false;
 
@@ -120,17 +120,17 @@ int lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when sensor
 
 int unsigned originalDisplayRefreshTime = 1000;
 int unsigned displayRefreshTime = originalDisplayRefreshTime;
-int unsigned displayRefreshTimeStamp ;
-int unsigned displayRefreshTimeAfterNotification = 4000; //Time to wait until a new notification was show
+int unsigned displayRefreshTimeStamp;
+int unsigned displayRefreshTimeAfterNotification = 4000;  //Time to wait until a new notification was show
 
 LiquidCrystal_I2C display(0x27, 20, 4);
 
 //CO2
 int vCO2 = 0;
-const float DC_GAIN = 8.5;                                                               // define the DC gain of amplifier CO2 sensor
-const float ZERO_POINT_VOLTAGE = 0.265;                                                  // define the output of the sensor in volts when the concentration of CO2 is 400PPM
-const float REACTION_VOLTAGE = 0.059;                                                    // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
-const float CO2Curve[3] = {2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.602 - 3))}; // Line curve with 2 points
+const float DC_GAIN = 8.5;                                                                  // define the DC gain of amplifier CO2 sensor
+const float ZERO_POINT_VOLTAGE = 0.265;                                                     // define the output of the sensor in volts when the concentration of CO2 is 400PPM
+const float REACTION_VOLTAGE = 0.059;                                                       // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
+const float CO2Curve[3] = { 2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.602 - 3)) };  // Line curve with 2 points
 
 float volts = 0;  // Variable to store current voltage from CO2 sensor
 float co2 = 0;    // Variable to store CO2 value
@@ -180,9 +180,9 @@ void loop() {
   showData();
 }
 
-void showData(){
+void showData() {
   int timeMark = millis();
-  if (timeMark - displayRefreshTimeStamp > displayRefreshTime){
+  if (timeMark - displayRefreshTimeStamp > displayRefreshTime) {
     displayRefreshTimeStamp = timeMark;
     //Restablish the time to the original in case a notification was sended
     displayRefreshTime = originalDisplayRefreshTime;
@@ -232,8 +232,8 @@ void readSerial() {
 /*
 After each notification on the display, we wait this time
 */
-void notificate(){
-  displayRefreshTimeStamp = millis();  
+void notificate() {
+  displayRefreshTimeStamp = millis();
   displayRefreshTime = displayRefreshTimeAfterNotification;
 }
 
@@ -308,7 +308,7 @@ void checkForLigh1ActiveSensors() {
       lastPriorityTimeOnLight1 = currTime;
       greenTime1 = originalGreen1Time;
       //display.setCursor(0, 1); todo: check if needed with the new refresh
-      //display.print("                    ");  // Clear the display line      
+      //display.print("                    ");  // Clear the display line
     }
   }
   previousState = state;
@@ -325,7 +325,7 @@ void checkForLigh2ActiveSensors() {
     vCNY6 = digitalRead(CNY6);
 
     int totalSensors = 3 - (vCNY4 + vCNY5 + vCNY6);
-    
+
 
     if (totalSensors > 0 && !light2IsPriority && !light2WaitingForGreenStatus
         && currTime - lastPriorityTimeOnLight2 > priorityWaitingTimeOnLight2) {
@@ -367,13 +367,13 @@ void checkForLigh2ActiveSensors() {
       //display.print("                  ");
     }
   }
-  previousStateLight2 = state;//Update the previous state with current
+  previousStateLight2 = state;  //Update the previous state with current
 }
 
 void setPedestrian1Pulser() {
 
   vP1 = digitalRead(P1);
-  if (!p1IsCrossing) { //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
+  if (!p1IsCrossing) {  //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
     if (vP1 == HIGH) {
       pedestrian1WaitingForRedStatus = true;
       isExternalRequestingLights = true;
@@ -412,8 +412,7 @@ void setPedestrian1Pulser() {
   }
 }
 
-void readAllData()
-{
+void readAllData() {
   vLDR1 = analogRead(LDR1);
   vLDR2 = analogRead(LDR2);
   vCO2 = analogRead(CO2);
@@ -424,7 +423,7 @@ void readAllData()
   } else {
     dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
   }
-  
+
   vCNY1 = digitalRead(CNY1);
   vCNY2 = digitalRead(CNY2);
   vCNY3 = digitalRead(CNY3);
@@ -432,7 +431,7 @@ void readAllData()
   vCNY5 = digitalRead(CNY5);
   vCNY6 = digitalRead(CNY6);
 }
- 
+
 void showDataInDisplay() {
   readAllData();
   display.setCursor(0, 0);
@@ -443,39 +442,76 @@ void showDataInDisplay() {
   display.print("CO2        CNY 4 5 6");
   display.setCursor(0, 3);
   display.print("L1   L2            ");
-  display.setCursor(5, 0); display.print(vLDR1);
-  display.setCursor(5, 1); display.print(vLDR2);
-  display.setCursor(5, 2); display.print(vCO2);
+  display.setCursor(5, 0);
+  display.print(vLDR1);
+  display.setCursor(5, 1);
+  display.print(vLDR2);
+  display.setCursor(5, 2);
+  display.print(vCO2);
   showGreenTimes();
-  display.setCursor(15, 1); display.print(1 * vCNY1);
-  display.setCursor(17, 1); display.print(1 * vCNY2);
-  display.setCursor(19, 1); display.print(1 * vCNY3);
-  display.setCursor(15, 3); display.print(1 * vCNY4);
-  display.setCursor(17, 3); display.print(1 * vCNY5);
-  display.setCursor(19, 3); display.print(1 * vCNY6);
+  display.setCursor(15, 1);
+  display.print(1 * vCNY1);
+  display.setCursor(17, 1);
+  display.print(1 * vCNY2);
+  display.setCursor(19, 1);
+  display.print(1 * vCNY3);
+  display.setCursor(15, 3);
+  display.print(1 * vCNY4);
+  display.setCursor(17, 3);
+  display.print(1 * vCNY5);
+  display.setCursor(19, 3);
+  display.print(1 * vCNY6);
 }
 
-void showGreenTimes(){
-  
-  unsigned long remainingGreenTime1 = (((greenTime1 + (blinkTime * blinks)) - (millis() - timeStamp)) + 999)/1000; //Sum 999 to round up
-  unsigned long remainingGreenTime2 = (((greenTime2 + (blinkTime * blinks)) - (millis() - timeStamp)) + 999)/1000;
-  if (remainingGreenTime1 < 0 || remainingGreenTime1 > 999 ) remainingGreenTime1 = 0; // to avoid negative val
-  if (remainingGreenTime2 < 0 || remainingGreenTime2 > 999) remainingGreenTime2 = 0; 
+void showGreenTimes() {
 
-  if (state == STATE_LIGHT1_GREEN_ON_START || state == STATE_LIGHT1_GREEN_BLINK){
-      display.setCursor(3, 3); display.print(remainingGreenTime1);
-  }else{
-    display.setCursor(3, 3); display.print("  ");
+  // Calcula el tiempo total para cada greenTime
+  unsigned long totalTime1 = greenTime1 + (blinkTime * blinks);
+  unsigned long totalTime2 = greenTime2 + (blinkTime * blinks);
+
+  // Calcula el tiempo transcurrido desde el inicio del período verde
+  unsigned long elapsedTime = millis() - timeStamp;
+
+  // Calcula el tiempo restante en milisegundos para cada greenTime
+  long remainingTimeMillis1 = (long)totalTime1 - (long)elapsedTime;
+  long remainingTimeMillis2 = (long)totalTime2 - (long)elapsedTime;
+
+  // Asegúrate de que el tiempo restante no sea negativo
+  if (remainingTimeMillis1 < 0) remainingTimeMillis1 = 0;
+  if (remainingTimeMillis2 < 0) remainingTimeMillis2 = 0;
+
+  // Redondea hacia arriba al segundo más cercano
+  unsigned long remainingGreenTime1 = (remainingTimeMillis1) / 1000;
+  unsigned long remainingGreenTime2 = (remainingTimeMillis2) / 1000;
+
+  if (state == STATE_LIGHT1_GREEN_ON_START ) {
+    display.setCursor(3, 3);
+    display.print(remainingGreenTime1);
+  }  else if(state == STATE_LIGHT1_GREEN_BLINK){
+    display.setCursor(3, 3);
+    display.print("0");
+  } else {
+    display.setCursor(3, 3);
+    display.print("  ");
   }
 
-  if (state == STATE_LIGHT2_GREEN_ON || state == STATE_LIGHT2_GREEN_BLINK){
-      display.setCursor(8, 3); display.print(remainingGreenTime2);
+  if (state == STATE_LIGHT2_GREEN_ON ) {
+    display.setCursor(8, 3);
+    display.print(remainingGreenTime2);
+  } else if(state == STATE_LIGHT2_GREEN_BLINK) {
+    display.setCursor(8, 3);
+    display.print("0");
   }else{
-    display.setCursor(8, 3); display.print("  ");
+    display.setCursor(8, 3);
+    display.print("  ");
   }
 
+  if (state == STATE_LIGHT_NIGHT_MODE ) {
+     display.setCursor(8, 3);
+    display.print("NG");
+  }
 }
- 
+
 
 void trafficLightFSM() {
   switch (state) {
@@ -584,10 +620,8 @@ void trafficLightFSM() {
       digitalWrite(LR1, HIGH);
 
       if (!nightMode) {
-        state = STATE_LIGHT2_GREEN_ON; // Return to normal operation
+        state = STATE_LIGHT2_GREEN_ON;  // Return to normal operation
       }
       break;
   }
 }
-
-
