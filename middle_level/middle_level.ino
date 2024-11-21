@@ -466,8 +466,8 @@ void showDataInDisplay() {
 void showGreenTimes() {
 
   // Calcula el tiempo total para cada greenTime
-  unsigned long totalTime1 = greenTime1 + (blinkTime * blinks);
-  unsigned long totalTime2 = greenTime2 + (blinkTime * blinks);
+  unsigned long totalTime1 = greenTime1 + (blinkTime * blinks) + 999;
+  unsigned long totalTime2 = greenTime2 + (blinkTime * blinks) + 999;
 
   // Calcula el tiempo transcurrido desde el inicio del período verde
   unsigned long elapsedTime = millis() - timeStamp;
