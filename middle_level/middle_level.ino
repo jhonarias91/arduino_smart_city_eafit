@@ -22,10 +22,17 @@
 
 //Constants
 
-const int STATE_LIGHT1_GREEN_ON_START = 0;
-const int STATE_LIGHT2_GREEN_ON = 4;
-const int STATE_LIGHT_NIGHT_MODE = 8;
-const int STATE_LIGHT_RED1_ON = 3;
+// States of the finite state machine (FSM)
+const int STATE_LIGHT1_GREEN_ON_START = 0;  // Traffic light 1 green light on at start
+const int STATE_LIGHT1_GREEN_BLINK = 1;     // Traffic light 1 green light blinking
+const int STATE_LIGHT1_YELLOW_ON = 2;       // Traffic light 1 yellow light on
+const int STATE_LIGHT_RED1_ON = 3;          // Traffic light 1 red light on
+const int STATE_LIGHT2_GREEN_ON = 4;        // Traffic light 2 green light on
+const int STATE_LIGHT2_GREEN_BLINK = 5;     // Traffic light 2 green light blinking
+const int STATE_LIGHT2_YELLOW_ON = 6;       // Traffic light 2 yellow light on
+const int STATE_LIGHT2_RED_ON = 7;          // Traffic light 2 red light on
+const int STATE_LIGHT_NIGHT_MODE = 8;       // Night mode where traffic lights blink alternately
+
 
 const int LIGHT2_INCREASE_WHEN3_SENSORS = 2000;
 const int LIGHT2_INCREASE_WHEN2_SENSORS = 1000;
@@ -361,114 +368,117 @@ void setPedestrian1Pulser() {
     display.print("                    ");
   }
 }
-
 void trafficLightFSM() {
-
   switch (state) {
     case STATE_LIGHT1_GREEN_ON_START:
-
+      // Turn on green light for traffic light 1 and red for traffic light 2
       digitalWrite(LG1, HIGH);
       digitalWrite(LR2, HIGH);
       digitalWrite(LY2, LOW);
       digitalWrite(LR1, LOW);
       digitalWrite(LY1, LOW);
       digitalWrite(LG2, LOW);
+
+      // Transition to blinking green light after greenTime1
       if (millis() - timeStamp >= greenTime1) {
-        state = 1;
+        state = STATE_LIGHT1_GREEN_BLINK;
         timeStamp = millis();
       }
       break;
 
-    case 1:  //green blink
-
+    case STATE_LIGHT1_GREEN_BLINK:
+      // Blink green light for traffic light 1
       if (millis() - timeStamp > blinkTime) {
         digitalWrite(LG1, !digitalRead(LG1));
         blinks++;
         timeStamp = millis();
       }
+
+      // Transition to yellow light after total blinks
       if (blinks > totalBlinksInOut) {
         blinks = 0;
-        state = 2;
+        state = STATE_LIGHT1_YELLOW_ON;
         timeStamp = millis();
       }
       break;
-    case 2:  //Yellow1 On
+
+    case STATE_LIGHT1_YELLOW_ON:
+      // Turn on yellow light for traffic light 1
       digitalWrite(LY1, HIGH);
       digitalWrite(LG1, LOW);
+
+      // Transition to red light for traffic light 1
       if (millis() - timeStamp > yellowTime) {
-        state = STATE_LIGHT_RED1_ON;  //check for 3
+        state = STATE_LIGHT_RED1_ON;
         timeStamp = millis();
       }
       break;
+
     case STATE_LIGHT_RED1_ON:
+      // Turn on red light for traffic light 1 and yellow for traffic light 2
       digitalWrite(LR1, HIGH);
       digitalWrite(LY1, LOW);
-      digitalWrite(LG1, LOW);
       digitalWrite(LY2, HIGH);
       digitalWrite(LG2, LOW);
       digitalWrite(LR2, LOW);
 
+      // Transition to green light for traffic light 2
       if (millis() - timeStamp > yellowTime) {
         state = STATE_LIGHT2_GREEN_ON;
         timeStamp = millis();
       }
       break;
-    case STATE_LIGHT2_GREEN_ON:  //Green2 on
+
+    case STATE_LIGHT2_GREEN_ON:
+      // Turn on green light for traffic light 2
       digitalWrite(LY2, LOW);
       digitalWrite(LG2, HIGH);
+
+      // Transition to blinking green light or night mode
       if (millis() - timeStamp > greenTime2) {
-        if (nightMode) {
-          state = STATE_LIGHT_NIGHT_MODE;  //Slowly move to nightMode
-        } else {
-          state = 5;
-        }
+        state = nightMode ? STATE_LIGHT_NIGHT_MODE : STATE_LIGHT2_GREEN_BLINK;
         timeStamp = millis();
       }
       break;
-    case 5:  //Blink Green2
+
+    case STATE_LIGHT2_GREEN_BLINK:
+      // Blink green light for traffic light 2
       if (millis() - timeStamp > blinkTime) {
         blinks++;
         timeStamp = millis();
         digitalWrite(LG2, !digitalRead(LG2));
       }
 
+      // Transition to yellow light after total blinks
       if (blinks > totalBlinksInOut) {
         blinks = 0;
+        state = STATE_LIGHT2_YELLOW_ON;
         timeStamp = millis();
-        state = 6;
       }
       break;
-    case 6:
+
+    case STATE_LIGHT2_YELLOW_ON:
+      // Turn on yellow light for traffic light 2
       digitalWrite(LG2, LOW);
       digitalWrite(LY2, HIGH);
-      if (millis() - timeStamp > yellowTime) {
-        state = 7;
-        timeStamp = millis();
-      }
-      break;
-    case 7:  //Red2 On
-      digitalWrite(LR2, HIGH);
-      digitalWrite(LY1, HIGH);
 
-      digitalWrite(LR1, LOW);
-      digitalWrite(LY2, LOW);
+      // Transition directly to the start of the cycle
       if (millis() - timeStamp > yellowTime) {
         state = STATE_LIGHT1_GREEN_ON_START;
         timeStamp = millis();
       }
       break;
+
     case STATE_LIGHT_NIGHT_MODE:
-
+      // Alternate blinking for night mode
       digitalWrite(LG2, HIGH);
-      digitalWrite(LY2, LOW);
-      digitalWrite(LR2, LOW);
-
-      digitalWrite(LG1, LOW);
-      digitalWrite(LY1, LOW);
       digitalWrite(LR1, HIGH);
 
       if (!nightMode) {
-        state = STATE_LIGHT2_GREEN_ON;  //Send to and state similar to this to avoid chrashes
+        state = STATE_LIGHT2_GREEN_ON; // Return to normal operation
       }
+      break;
   }
 }
+
+
