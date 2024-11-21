@@ -304,7 +304,7 @@ void checkForLigh1ActiveSensors() {
       light1IsPriority = true;
       light1WaitingForGreenStatus = false;
       originalGreen1Time = greenTime1;
-      greenTime1 += lightGreen1IncreaseWhenSensors + getTimeForCO2Sensor();
+      greenTime1 += lightGreen1IncreaseWhenSensors;
 
       display.setCursor(0, 1);
       display.print("Prio ");
@@ -360,7 +360,8 @@ void checkForLigh2ActiveSensors() {
       light2IsPriority = true;
       light2WaitingForGreenStatus = false;
       originalGreen2Time = greenTime2;
-      greenTime2 = greenTime2 + lightGreen2IncreaseWhenSensors + getTimeForCO2Sensor();;
+      greenTime2 = greenTime2 + lightGreen2IncreaseWhenSensors + getTimeForCO2Sensor();
+      Serial.println(greenTime2);
       display.setCursor(0, 1);
       display.print("Prio ");
       display.print(lastLight2TotalSensors);
@@ -452,29 +453,31 @@ void readAllData() {
 void showDataInDisplay() {
   readAllData();
   display.setCursor(0, 0);
-  display.print("LDR1       CNY 1 2 3");
+  display.print("LDR1          CNY123");
   display.setCursor(0, 1);
   display.print("LDR2               ");
   display.setCursor(0, 2);
-  display.print("CO2        CNY 4 5 6");
+  display.print("CO2           CNY456");
   display.setCursor(0, 3);
   display.print("L1   L2            ");
   display.setCursor(5, 0);
   display.print(vLDR1);
   display.setCursor(5, 1);
   display.print(vLDR2);
-  display.setCursor(5, 2);
+  display.setCursor(4, 2);
   display.print(vCO2);
+  display.setCursor(8, 2);
+  display.print(getTimeForCO2Sensor());
   showGreenTimes();
-  display.setCursor(15, 1);
-  display.print(1 * vCNY1);
   display.setCursor(17, 1);
+  display.print(1 * vCNY1);
+  display.setCursor(18, 1);
   display.print(1 * vCNY2);
   display.setCursor(19, 1);
   display.print(1 * vCNY3);
-  display.setCursor(15, 3);
-  display.print(1 * vCNY4);
   display.setCursor(17, 3);
+  display.print(1 * vCNY4);
+  display.setCursor(18, 3);
   display.print(1 * vCNY5);
   display.setCursor(19, 3);
   display.print(1 * vCNY6);
@@ -529,7 +532,6 @@ void showGreenTimes() {
   }
 }
 
-
 int getTimeForCO2Sensor(){
   dCO2 = 0;
   volts = analogRead(CO2) * 5.0 / 1023.0;
@@ -541,7 +543,9 @@ int getTimeForCO2Sensor(){
   {
     dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
   }
-  return co2GreenTime2 * dCO2 / 10000;
+  
+  float time = (co2GreenTime2 * dCO2 / 10000);
+  return (int)(fmod(time, co2GreenTime2));
 }
 
 void trafficLightFSM() {
