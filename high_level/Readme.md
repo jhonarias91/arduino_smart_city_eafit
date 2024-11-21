@@ -110,11 +110,24 @@ la maqueta.
 
 ## Lista de valores configurables.
 
-| ID  | Name        | Value | Descripción                                                   |
-|-----|-------------|-------|---------------------------------------------------------------|
-| 1   | greenTime1  | 500   | Tiempo asignado en milisegundos para la primera luz verde.    |
-| 2   | greenTime2  | 200   | Tiempo asignado en milisegundos para la segunda luz verde.    |
-| 3   | yellowTime  | 30    | Tiempo asignado en segundos para la luz amarilla.            |
+| ID  | Name                              | Value  | Descripción                                                                                      |
+|-----|-----------------------------------|--------|--------------------------------------------------------------------------------------------------|
+| 1   | greenTime1                        | 2000   | Tiempo asignado en milisegundos para la primera luz verde.                                       |
+| 2   | greenTime2                        | 4000   | Tiempo asignado en milisegundos para la segunda luz verde.                                       |
+| 3   | yellowTime                        | 500    | Tiempo asignado en milisegundos para la luz amarilla.                                            |
+| 4   | blinkTime                         | 100    | Tiempo de parpadeo en milisegundos para la luz verde intermitente.                               |
+| 5   | totalBlinksInOut                  | 6      | Número total de parpadeos durante el ciclo de luz verde intermitente.                           |
+| 6   | pedestrianCrossTime               | 10000  | Tiempo asignado en milisegundos para el cruce de peatones.                                       |
+| 7   | pedestrianReduceGreenTime1        | 3000   | Reducción del tiempo de la luz verde 1 para permitir el cruce de peatones.                      |
+| 8   | lightGreen1TimeWhen3Sensors       | 4000   | Tiempo adicional para la luz verde 1 cuando 3 sensores están activos.                           |
+| 9   | lightGreen2IncreaseWhenSensors    | 2000   | Incremento del tiempo para la luz verde 2 cuando sensores detectan actividad.                   |
+| 10  | priorityWaitingTimeOnLight2       | 7000   | Tiempo de espera en milisegundos antes de dar prioridad nuevamente a la luz 2.                  |
+| 11  | priorityWaitingTimeOnLight1       | 3000   | Tiempo de espera en milisegundos antes de dar prioridad nuevamente a la luz 1.                  |
+| 12  | lightGreen1IncreaseWhenSensors    | 2000   | Incremento del tiempo para la luz verde 1 cuando sensores detectan actividad.                   |
+| 13  | displayRefreshTimeAfterNotification | 4000 | Tiempo de refresco en milisegundos del display después de mostrar una notificación.             |
+| 14  | greenLight1TimeWhenCar            | 3000   | Tiempo asignado para la luz verde 1 cuando se detecta un vehículo.                              |
+
+
 
 
 ![maqueta Smart Weather](../resources/smart_weather.png) 

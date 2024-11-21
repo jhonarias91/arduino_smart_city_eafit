@@ -39,7 +39,7 @@ const int ALL_SENSORS_ACTIVE = 3;
 const int TWO_SENSORS_ACTIVE = 2;
 const int LAST_SENSOR_TIME_CHECKER = 10;
 
-int originalGreen2Time = 2000;  //No as a contast to be able to change using serial
+int originalGreen2Time = 4000;  //No as a contast to be able to change using serial
 int originalGreen1Time = 2000;
 
 unsigned long timeStamp = 0;
@@ -52,7 +52,7 @@ int blinks = 0;
 long blinkTime = 100;
 long totalBlinksInOut = 6;
 //Pedestrian 1 pulser control
-const int PEDESTRIAN_CROSS_TIME = 10000;
+int pedestrianCrossTime = 10000;
 int vP1 = 0;
 int vP2 = 0;
 bool p1IsCrossing = false;
@@ -72,9 +72,7 @@ int previousStateLight2 = -1;           // To ligh2 previous state
 int lightGreen1TimeWhen3Sensors = 4000;
 //Additional time when 3 sensors are active.
 int lightGreen2IncreaseWhenSensors = 2000;
-//This original is used to allow change using external like Serial.read
-const int originalTotalTimesWhenLight2Priority = 3;  //Total times the light is set with the priority time.
-int totalTimesWhenLight2Priority = originalTotalTimesWhenLight2Priority;
+int totalTimesWhenLight2Priority = 3; //This will be the amount of sensors
 
 int vCNY4 = 0;
 int vCNY5 = 0;
@@ -107,8 +105,7 @@ int vCNY3 = 0;
 bool light1IsPriority = false;
 bool light1WaitingForGreenStatus = false;
 int lastLight1TotalSensors = 0;
-const int originalTotalTimesWhenLight1Priority = 3;  // Total cycles with increased green time
-int totalTimesWhenLight1Priority = originalTotalTimesWhenLight1Priority;
+int totalTimesWhenLight1Priority = 3;
 
 long unsigned lastPriorityTimeOnLight1 = 0;        // Last time Light 1 had priority
 long unsigned priorityWaitingTimeOnLight1 = 3000;  // Time to wait before giving priority again
@@ -118,8 +115,7 @@ int lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when sensor
 
 //#### End sensors light 2 ###
 
-int unsigned originalDisplayRefreshTime = 1000;
-int unsigned displayRefreshTime = originalDisplayRefreshTime;
+int unsigned displayRefreshTime = 1000;
 int unsigned displayRefreshTimeStamp;
 int unsigned displayRefreshTimeAfterNotification = 4000;  //Time to wait until a new notification was show
 
@@ -185,7 +181,7 @@ void showData() {
   if (timeMark - displayRefreshTimeStamp > displayRefreshTime) {
     displayRefreshTimeStamp = timeMark;
     //Restablish the time to the original in case a notification was sended
-    displayRefreshTime = originalDisplayRefreshTime;
+    displayRefreshTime = 1000;
     showDataInDisplay();
   }
 }
@@ -205,13 +201,36 @@ void readSerial() {
         // Compare the keys and assign the values
         if (idStr.equalsIgnoreCase("greenTime1")) {
           greenTime1 = value;
-          originalGreen1Time = greenTime1;  //useful when we change the greenTime for some request and then assign the same value
+          originalGreen1Time = greenTime1;
         } else if (idStr.equalsIgnoreCase("greenTime2")) {
           greenTime2 = value;
           originalGreen2Time = greenTime2;
         } else if (idStr.equalsIgnoreCase("yellowTime")) {
           yellowTime = value;
-        }
+        } else if (idStr.equalsIgnoreCase("blinkTime")) {
+          blinkTime = value;
+        } else if (idStr.equalsIgnoreCase("totalBlinksInOut")) {
+          totalBlinksInOut = value;
+        } else if (idStr.equalsIgnoreCase("pedestrianReduceGreenTime1")) {
+          pedestrianReduceGreenTime1 = value;
+        } else if (idStr.equalsIgnoreCase("lightGreen1TimeWhen3Sensors")) {
+          lightGreen1TimeWhen3Sensors = value;
+        } else if (idStr.equalsIgnoreCase("lightGreen2IncreaseWhenSensors")) {
+          lightGreen2IncreaseWhenSensors = value;
+        } else if (idStr.equalsIgnoreCase("priorityWaitingTimeOnLight2")) {
+          priorityWaitingTimeOnLight2 = value;
+        } else if (idStr.equalsIgnoreCase("priorityWaitingTimeOnLight1")) {
+          priorityWaitingTimeOnLight1 = value;
+        } else if (idStr.equalsIgnoreCase("lightGreen1IncreaseWhenSensors")) {
+          lightGreen1IncreaseWhenSensors = value;
+        } else if (idStr.equalsIgnoreCase("displayRefreshTimeAfterNotification")) {
+          displayRefreshTimeAfterNotification = value;
+        }  else if (idStr.equalsIgnoreCase("greenLight1TimeWhenCar")) {
+          greenLight1TimeWhenCar = value;
+        }  else if (idStr.equalsIgnoreCase("pedestrianCrossTime")) {
+          pedestrianCrossTime = value;
+        } 
+
         // Show the value
         display.setCursor(0, 3);
         display.print("                    ");  // Clean the display
@@ -300,9 +319,7 @@ void checkForLigh1ActiveSensors() {
   //  if (!p1IsCrossing && light1IsPriority && ((currTime - light1PriorityTimeStamp) > (greenTime1 + yellowTime * 2 + greenTime1 + (blinkTime * totalBlinksInOut)))) {
   if (light1IsPriority && previousState == STATE_LIGHT1_GREEN_ON_START && state != STATE_LIGHT1_GREEN_ON_START) {
     totalTimesWhenLight1Priority--;
-    if (totalTimesWhenLight1Priority <= 0) {
-      // Reset priority flags and times
-      totalTimesWhenLight1Priority = originalTotalTimesWhenLight1Priority;
+    if (totalTimesWhenLight1Priority <= 0) {      
       light1IsPriority = false;
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight1 = currTime;
@@ -358,7 +375,7 @@ void checkForLigh2ActiveSensors() {
     totalTimesWhenLight2Priority--;
 
     if (totalTimesWhenLight2Priority <= 0) {
-      totalTimesWhenLight2Priority = originalTotalTimesWhenLight2Priority;
+      
       light2IsPriority = false;
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight2 = currTime;
@@ -392,7 +409,7 @@ void setPedestrian1Pulser() {
     p1TimeStamp = millis();
     p1IsCrossing = true;
     originalGreen2Time = greenTime2;
-    greenTime2 = greenTime2 + PEDESTRIAN_CROSS_TIME;  //Increase the the other Light Green
+    greenTime2 = greenTime2 + pedestrianCrossTime;  //Increase the the other Light Green
     pedestrian1WaitingForRedStatus = false;
     display.setCursor(0, 0);
     display.print("Pedestrian1 crossing");
