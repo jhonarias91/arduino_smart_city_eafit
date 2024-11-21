@@ -69,10 +69,8 @@ void loop() {
 Every CNY5EnabledTime we check if there is a car on CNY5 if that
 is the case, we give higher priority to this ligh, reducing greenTime2, 
 */
-
 void checkForCNYYLigh2Sensor() {
   vCNY2 = digitalRead(CNY2);
-  Serial.println(vCNY2);
     //When the infrared receive a 0 is because there is a car there.
   if (!p1IsCrossing && vCNY2 == LOW && !CNY2WaitinForGreenStatus) {
       CNY2WaitinForGreenStatus = true;
