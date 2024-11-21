@@ -5,6 +5,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arduino Data Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 80%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: #fff;
+        }
+        
+        thead {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        td input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        td button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        td button:hover {
+            background-color: #45a049;
+        }
+        
+        footer {
+            text-align: center;
+            margin: 20px 0;
+            color: #777;
+        }
+    </style>
     <script>
         async function sendData(id) {
             const row = document.querySelector(`tr[data-id='${id}']`);
@@ -34,8 +100,8 @@
 </head>
 
 <body>
-    <h1>Smart City</h1>
-    <table border="1">
+    <h1>Smart City Control Panel</h1>
+    <table>
         <thead>
             <tr>
                 <th>ID</th>
@@ -55,6 +121,9 @@
             {% endfor %}
         </tbody>
     </table>
+    <footer>
+        &copy; 2024 Smart City Project
+    </footer>
 </body>
 
 </html>

@@ -528,7 +528,7 @@ void showGreenTimes() {
 
   if (state == STATE_LIGHT_NIGHT_MODE ) {
      display.setCursor(8, 3);
-    display.print("NG");
+    display.print("NIGHT");
   }
 }
 
