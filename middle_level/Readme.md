@@ -51,6 +51,53 @@ Cambia los semáforos a una operación intermitente para dar prelación a el sem
 
 Si varios sensores detectan vehículos simultáneamente, la dirección correspondiente recibe mayor tiempo de luz verde.
 
+### Máquina de estados:
+
+- STATE_LIGHT1_GREEN_ON_START (0):
+
+Semáforo 1 en verde al inicio. El semáforo 1 enciende su luz verde, permitiendo el paso de vehículos en esa dirección y semáforo en rojo en el otro sentido.
+
+- STATE_LIGHT1_GREEN_BLINK (1):
+
+Parpadeo de luz verde en semáforo 1. La luz verde del semáforo 1 comienza a parpadear para avisar que pronto cambiará.
+- STATE_LIGHT1_YELLOW_ON (2):
+
+Semáforo 1 en amarillo. El semáforo 1 enciende la luz amarilla, indicando a los conductores que deben prepararse para detenerse.
+- STATE_LIGHT_RED1_ON (3):
+
+Semáforo 1 en rojo y semáforo 2 preparándose. El semáforo 1 está en rojo, mientras que el semáforo 2 se prepara para cambiar a verde.
+- STATE_LIGHT2_GREEN_ON (4):
+
+Semáforo 2 en verde. El semáforo 2 enciende su luz verde, permitiendo el paso de vehículos en esa dirección.
+- STATE_LIGHT2_GREEN_BLINK (5):
+
+Parpadeo de luz verde en semáforo 2. La luz verde del semáforo 2 comienza a parpadear para avisar que pronto cambiará.
+- STATE_LIGHT2_YELLOW_ON (6):
+
+Semáforo 2 en amarillo. El semáforo 2 enciende la luz amarilla, indicando a los conductores que deben prepararse para detenerse.
+- STATE_LIGHT_NIGHT_MODE (7):
+
+Modo nocturno con prioridad en semáforo 2. Se activa el modo nocturno, dando prioridad al semáforo 2.
+
+#### Transiciones:
+
+- De STATE_LIGHT1_GREEN_ON_START a STATE_LIGHT1_GREEN_BLINK:
+Después de greenTime1.
+- De STATE_LIGHT1_GREEN_BLINK a STATE_LIGHT1_YELLOW_ON:
+Después de totalBlinksInOut parpadeos.
+- De STATE_LIGHT1_YELLOW_ON a STATE_LIGHT_RED1_ON:
+Después de yellowTime.
+- De STATE_LIGHT_RED1_ON a STATE_LIGHT2_GREEN_ON:
+Después de yellowTime.
+- De STATE_LIGHT2_GREEN_ON a STATE_LIGHT2_GREEN_BLINK o STATE_LIGHT_NIGHT_MODE:
+Después de greenTime2.
+Dependiendo de si el modo nocturno está activado.
+- De STATE_LIGHT2_GREEN_BLINK a STATE_LIGHT2_YELLOW_ON:
+Después de totalBlinksInOut parpadeos.
+- De STATE_LIGHT2_YELLOW_ON a STATE_LIGHT1_GREEN_ON_START:
+Después de yellowTime.
+- De STATE_LIGHT_NIGHT_MODE a STATE_LIGHT2_GREEN_ON:
+Al desactivarse el modo nocturno.
 
 ![maqueta Smart Weather](../resources/smart_weather.png) 
 

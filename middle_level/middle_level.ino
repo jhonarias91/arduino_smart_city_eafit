@@ -30,8 +30,7 @@ const int STATE_LIGHT_RED1_ON = 3;          // Traffic light 1 red light on
 const int STATE_LIGHT2_GREEN_ON = 4;        // Traffic light 2 green light on
 const int STATE_LIGHT2_GREEN_BLINK = 5;     // Traffic light 2 green light blinking
 const int STATE_LIGHT2_YELLOW_ON = 6;       // Traffic light 2 yellow light on
-const int STATE_LIGHT2_RED_ON = 7;          // Traffic light 2 red light on
-const int STATE_LIGHT_NIGHT_MODE = 8;       // Night mode where traffic lights blink alternately
+const int STATE_LIGHT_NIGHT_MODE = 7;       // Night mode where light 2 has the priority
 
 
 const int LIGHT2_INCREASE_WHEN3_SENSORS = 2000;
@@ -333,7 +332,7 @@ void checkForLigh2ActiveSensors() {
 void setPedestrian1Pulser() {
 
   vP1 = digitalRead(P1);
-  if (!p1IsCrossing) {
+  if (!p1IsCrossing) { //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
     if (vP1 == HIGH) {
       pedestrian1WaitingForRedStatus = true;
       isExternalRequestingLights = true;
@@ -341,6 +340,7 @@ void setPedestrian1Pulser() {
       //remaining time
       unsigned long remainingGreenTime1 = greenTime1 - (millis() - timeStamp);
       if (remainingGreenTime1 > pedestrianReduceGreenTime1) {
+        //Decrease the time for the pedestrian to cross
         greenTime1 = pedestrianReduceGreenTime1;
       }
     }
@@ -361,6 +361,7 @@ void setPedestrian1Pulser() {
   if (p1IsCrossing && (millis() - p1TimeStamp > (greenTime2 + blinkTime * blinks + yellowTime))) {
     p1IsCrossing = false;
     greenTime2 = originalGreen2Time;
+    //Set the greentime1 to the original value after the pedestrian has crossed
     greenTime1 = originalGreen1Time;
 
     isExternalRequestingLights = false;
@@ -368,6 +369,7 @@ void setPedestrian1Pulser() {
     display.print("                    ");
   }
 }
+
 void trafficLightFSM() {
   switch (state) {
     case STATE_LIGHT1_GREEN_ON_START:
