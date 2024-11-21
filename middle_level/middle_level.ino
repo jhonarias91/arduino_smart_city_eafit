@@ -310,9 +310,6 @@ void checkForLigh2ActiveSensors() {
   if (light2IsPriority && checkStateChange) {
     totalTimesWhenLight2Priority--;
 
-    Serial.print("totalTimesWhenLight2Priority: ");
-    Serial.println(totalTimesWhenLight2Priority);
-
     if (totalTimesWhenLight2Priority <= 0) {
       totalTimesWhenLight2Priority = originalTotalTimesWhenLight2Priority;
       light2IsPriority = false;
