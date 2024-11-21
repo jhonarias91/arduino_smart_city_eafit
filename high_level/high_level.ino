@@ -130,7 +130,7 @@ const float CO2Curve[3] = { 2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.60
 float volts = 0;  // Variable to store current voltage from CO2 sensor
 float co2 = 0;    // Variable to store CO2 value
 float dCO2 = 0;
-unsigned co2GreenTime2 = 20;
+unsigned long co2GreenTime2 = 20000;
 //End CO2
 
 void setup() {
