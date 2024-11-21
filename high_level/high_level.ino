@@ -90,6 +90,9 @@ bool nightMode = false;
 
 LiquidCrystal_I2C display(0x27, 20, 4);
 
+//CO2
+float co2GreenTime2 = 10;
+
 void setup() {
 
   // Output pin config
@@ -121,6 +124,7 @@ void setup() {
 }
 
 void loop() {
+  Serial.println(getTimeForCO2Sensor());
   trafficLightFSM();
   setPedestrian1Pulser();
   //checkForCNYYLigh2Sensor();
@@ -147,7 +151,9 @@ void readSerial() {
           greenTime2 = value;
         } else if (idStr.equalsIgnoreCase("yellowTime")) {
           yellowTime = value;
-        } else {
+        } else if (idStr.equalsIgnoreCase("co2GreenTime2")) {
+          co2GreenTime2 = value;
+        }else {
           // Si el idStr no coincide con ninguna propiedad
           Serial.println("Propiedad no reconocida: " + idStr);
         }
@@ -250,6 +256,7 @@ void checkForLigh2ActiveSensors() {
       light2PriorityTimeSTamp = millis();
       light2IsPriority = true;
       light2WaitingForGreenStatus = false;
+      //lectura de sensor de co2 validar rangos
       greenTime2 += lightGreen2IncreaseWhenSensors;
       display.setCursor(0, 1);
       display.print("Prio ");
@@ -417,4 +424,29 @@ void setPedestrian1Pulser() {
     display.setCursor(0, 0);
     display.print("                    ");
   }
+}
+#define CO2 A2  // CO2 sensor connected in pin A3
+const float DC_GAIN = 8.5;                                                               // define the DC gain of amplifier CO2 sensor
+const float ZERO_POINT_VOLTAGE = 0.265;                                                  // define the output of the sensor in volts when the concentration of CO2 is 400PPM
+const float REACTION_VOLTAGE = 0.059;                                                    // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
+const float CO2Curve[3] = {2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.602 - 3))}; // Line curve with 2 points
+
+// Variable definitions
+float volts = 0;  // Variable to store current voltage from CO2 sensor
+float co2 = 0;    // Variable to store CO2 value
+int vCO2 = 0;
+float dCO2 = 0;
+
+int getTimeForCO2Sensor(){
+  dCO2 = 0;
+  volts = analogRead(CO2) * 5.0 / 1023.0;
+  if (volts / DC_GAIN >= ZERO_POINT_VOLTAGE)
+  {
+    dCO2 = 400;
+  }
+  else
+  {
+    dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
+  }
+  return co2GreenTime2 * dCO2 / 10000;
 }

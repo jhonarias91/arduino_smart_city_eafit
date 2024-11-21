@@ -1,0 +1,5 @@
+[wokwi]
+version = 1
+firmware = 'high_level.ino.hex'
+elf = 'high_level.ino.elf'
+rfc2217ServerPort = 4000

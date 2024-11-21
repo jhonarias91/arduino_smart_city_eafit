@@ -8,7 +8,7 @@ app = Flask(__name__)
 def get_serial_connection():
     try:
         ser = serial.Serial()
-        ser.port = "COM5"
+        ser.port = "COM3"
         ser.baudrate = 9600
         ser.timeout = 1
         ser.dtr = False  # Set DTR False before opening to avoid reboot
@@ -26,6 +26,7 @@ def index():
         {"id": 1, "name": "greenTime1", "value": "500"},
         {"id": 2, "name": "greenTime2", "value": "200"},
         {"id": 3, "name": "yellowTime", "value": "30"},
+        {"id": 4, "name": "co2GreenTime2", "value": "10"}
     ]
     return render_template("index.html", data=data)
 
