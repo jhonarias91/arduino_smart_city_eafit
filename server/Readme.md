@@ -3,10 +3,12 @@
 
 Create enviroment
 
-python -m venv env
+`cd server`
 
-env/Scripts/activate
+`python -m venv env`
 
-pip install flash pyserial
+`env/Scripts/activate`
+
+`pip install flash pyserial`
 
 Make sure to close the arduino Serial Monitor.
