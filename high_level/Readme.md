@@ -102,6 +102,21 @@ Después de yellowTime.
 - De STATE_LIGHT_NIGHT_MODE a STATE_LIGHT2_GREEN_ON:
 Al desactivarse el modo nocturno.
 
+# Parametrización:
+
+La parametrización de manera remota nos permite configurar cualquier dispositivo por medio de la 
+interfaz web, en nuestro caso vamos a usar la entrada Serial al no contar con elementos de red en 
+la maqueta.
+
+## Lista de valores configurables.
+
+| ID  | Name        | Value | Descripción                                                   |
+|-----|-------------|-------|---------------------------------------------------------------|
+| 1   | greenTime1  | 500   | Tiempo asignado en milisegundos para la primera luz verde.    |
+| 2   | greenTime2  | 200   | Tiempo asignado en milisegundos para la segunda luz verde.    |
+| 3   | yellowTime  | 30    | Tiempo asignado en segundos para la luz amarilla.            |
+
+
 ![maqueta Smart Weather](../resources/smart_weather.png) 
 
 **Figura 1**: Sensores y componentes.
