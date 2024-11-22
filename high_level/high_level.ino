@@ -23,6 +23,8 @@
 
 //Constants
 
+const String ID = "IDA23";  //ID to identify the device TODO: Change before deploy
+
 // States of the finite state machine (FSM)
 const int STATE_LIGHT1_GREEN_ON_START = 0;  // Traffic light 1 green light on at start
 const int STATE_LIGHT1_GREEN_BLINK = 1;     // Traffic light 1 green light blinking
@@ -32,6 +34,7 @@ const int STATE_LIGHT2_GREEN_ON = 4;        // Traffic light 2 green light on
 const int STATE_LIGHT2_GREEN_BLINK = 5;     // Traffic light 2 green light blinking
 const int STATE_LIGHT2_YELLOW_ON = 6;       // Traffic light 2 yellow light on
 const int STATE_LIGHT_NIGHT_MODE = 7;       // Night mode where light 2 has the priority
+
 
 const int LIGHT2_INCREASE_WHEN3_SENSORS = 2000;
 const int LIGHT2_INCREASE_WHEN2_SENSORS = 1000;
@@ -71,7 +74,7 @@ int previousStateLight2 = -1;           // To ligh2 previous state
 //Middle level
 //Additional time when 3 sensors are active.
 int lightGreen2IncreaseWhenSensors = 2000;
-int totalTimesWhenLight2Priority = 3; //This will be the amount of sensors
+int totalTimesWhenLight2Priority = 3;  //This will be the amount of sensors
 
 int vCNY4 = 0;
 int vCNY5 = 0;
@@ -133,6 +136,10 @@ float dCO2 = 0;
 unsigned long co2GreenTime2 = 20000;
 //End CO2
 
+//Sending to server
+unsigned long timeToSendData = 5000;
+unsigned long timeToSendDataTimeStamp = 0;
+//
 void setup() {
   long unsigned currTime = millis();
   // Output pin config
@@ -164,6 +171,8 @@ void setup() {
   lastPriorityTimeOnLight2 = 0;
   lastSensorTimeChecked = currTime;
   displayRefreshTimeStamp = currTime;
+  timeToSendDataTimeStamp = currTime;
+
 }
 
 void loop() {
@@ -174,6 +183,81 @@ void loop() {
   checkNighMode();
   readSerial();
   showData();
+  sendDataToServer();
+}
+
+long i=0;
+void sendDataToServer() {
+  unsigned long currTime = millis();
+  if (currTime - timeToSendDataTimeStamp > timeToSendData) {
+    timeToSendDataTimeStamp = currTime;  
+    
+    char buffer[50]; // Buffer to hold the formatted string
+    sprintf(buffer, "ID23_greenTime1:%d", i); // Format the string
+    String data = String(buffer); // Convert to Arduino String if needed
+    Serial.println(data);
+    i++;
+    sprintf(buffer, "greenTime2:%d", i); // Format the string
+    data = String(buffer); // Convert to Arduino String if needed
+    Serial.println(data);
+    i++;
+
+    //Serial.print(greenTime1);
+    //Serial.print("\n");
+/*
+    Serial.print("greenTime2_");
+    Serial.print(greenTime2);
+    Serial.print("\n");
+
+    Serial.print("yellowTime_");
+    Serial.print(yellowTime);
+    Serial.print("\n");
+
+    Serial.print("blinkTime_");
+    Serial.print(blinkTime);
+    Serial.print("\n");
+
+    Serial.print("totalBlinksInOut_");
+    Serial.print(totalBlinksInOut);
+    Serial.print("\n");
+
+    Serial.print("pedestrianReduceGreenTime1_");
+    Serial.print(pedestrianReduceGreenTime1);
+    Serial.print("\n");
+
+    Serial.print("lightGreen2IncreaseWhenSensors_");
+    Serial.print(lightGreen2IncreaseWhenSensors);
+    Serial.print("\n");
+
+    Serial.print("priorityWaitingTimeOnLight2_");
+    Serial.print(priorityWaitingTimeOnLight2);
+    Serial.print("\n");
+
+    Serial.print("priorityWaitingTimeOnLight1_");
+    Serial.print(priorityWaitingTimeOnLight1);
+    Serial.print("\n");
+
+    Serial.print("lightGreen1IncreaseWhenSensors_");
+    Serial.print(lightGreen1IncreaseWhenSensors);
+    Serial.print("\n");
+
+    Serial.print("displayRefreshTimeAfterNotification_");
+    Serial.print(displayRefreshTimeAfterNotification);
+    Serial.print("\n");
+
+    Serial.print("greenLight1TimeWhenCar_");
+    Serial.print(greenLight1TimeWhenCar);
+    Serial.print("\n");
+
+    Serial.print("pedestrianCrossTime_");
+    Serial.print(pedestrianCrossTime);
+    Serial.print("\n");
+
+    Serial.print("co2GreenTime2_");
+    Serial.print(co2GreenTime2);
+    Serial.print("\n");
+    */
+  }
 }
 
 void showData() {
@@ -223,14 +307,14 @@ void readSerial() {
           lightGreen1IncreaseWhenSensors = value;
         } else if (idStr.equalsIgnoreCase("displayRefreshTimeAfterNotification")) {
           displayRefreshTimeAfterNotification = value;
-        }  else if (idStr.equalsIgnoreCase("greenLight1TimeWhenCar")) {
+        } else if (idStr.equalsIgnoreCase("greenLight1TimeWhenCar")) {
           greenLight1TimeWhenCar = value;
-        }  else if (idStr.equalsIgnoreCase("pedestrianCrossTime")) {
+        } else if (idStr.equalsIgnoreCase("pedestrianCrossTime")) {
           pedestrianCrossTime = value;
         } else if (idStr.equalsIgnoreCase("co2GreenTime2")) {
           co2GreenTime2 = value;
-        } 
-        
+        }
+
         // Show the value
         display.setCursor(0, 3);
         display.print("                    ");  // Clean the display
@@ -319,7 +403,7 @@ void checkForLigh1ActiveSensors() {
   //  if (!p1IsCrossing && light1IsPriority && ((currTime - light1PriorityTimeStamp) > (greenTime1 + yellowTime * 2 + greenTime1 + (blinkTime * totalBlinksInOut)))) {
   if (light1IsPriority && previousState == STATE_LIGHT1_GREEN_ON_START && state != STATE_LIGHT1_GREEN_ON_START) {
     totalTimesWhenLight1Priority--;
-    if (totalTimesWhenLight1Priority <= 0) {      
+    if (totalTimesWhenLight1Priority <= 0) {
       light1IsPriority = false;
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight1 = currTime;
@@ -376,7 +460,7 @@ void checkForLigh2ActiveSensors() {
     totalTimesWhenLight2Priority--;
 
     if (totalTimesWhenLight2Priority <= 0) {
-      
+
       light2IsPriority = false;
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight2 = currTime;
@@ -504,10 +588,10 @@ void showGreenTimes() {
   unsigned long remainingGreenTime1 = (remainingTimeMillis1) / 1000;
   unsigned long remainingGreenTime2 = (remainingTimeMillis2) / 1000;
 
-  if (state == STATE_LIGHT1_GREEN_ON_START ) {
+  if (state == STATE_LIGHT1_GREEN_ON_START) {
     display.setCursor(3, 3);
     display.print(remainingGreenTime1);
-  }  else if(state == STATE_LIGHT1_GREEN_BLINK){
+  } else if (state == STATE_LIGHT1_GREEN_BLINK) {
     display.setCursor(3, 3);
     display.print("0");
   } else {
@@ -515,35 +599,32 @@ void showGreenTimes() {
     display.print("  ");
   }
 
-  if (state == STATE_LIGHT2_GREEN_ON ) {
+  if (state == STATE_LIGHT2_GREEN_ON) {
     display.setCursor(8, 3);
     display.print(remainingGreenTime2);
-  } else if(state == STATE_LIGHT2_GREEN_BLINK) {
+  } else if (state == STATE_LIGHT2_GREEN_BLINK) {
     display.setCursor(8, 3);
     display.print("0");
-  }else{
+  } else {
     display.setCursor(8, 3);
     display.print("  ");
   }
 
-  if (state == STATE_LIGHT_NIGHT_MODE ) {
-     display.setCursor(8, 3);
+  if (state == STATE_LIGHT_NIGHT_MODE) {
+    display.setCursor(8, 3);
     display.print("NIGHT");
   }
 }
 
-int getTimeForCO2Sensor(){
+int getTimeForCO2Sensor() {
   dCO2 = 0;
   volts = analogRead(CO2) * 5.0 / 1023.0;
-  if (volts / DC_GAIN >= ZERO_POINT_VOLTAGE)
-  {
+  if (volts / DC_GAIN >= ZERO_POINT_VOLTAGE) {
     dCO2 = 400;
-  }
-  else
-  {
+  } else {
     dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
   }
-  
+
   float time = (co2GreenTime2 * dCO2 / 10000);
   return (int)(fmod(time, co2GreenTime2));
 }

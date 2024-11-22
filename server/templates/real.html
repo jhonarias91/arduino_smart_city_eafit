@@ -1,80 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Real time data</title>
+    <title>SmartCity Notification Center</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      #events {
-        border: 1px solid #ccc;
-        padding: 10px;
-        max-height: 300px;
-        overflow-y: scroll;
-      }
-      .event {
-        padding: 5px;
-        margin-bottom: 5px;
-        background-color: #f9f9f9;
-        border: 1px solid #ddd;
-      }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        thead {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin: 20px 0;
+        }
+        
+        #tunnel {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 150px;
+            overflow: hidden;
+            border: 2px solid #fff;
+            box-shadow: 0 0 5px #00ff00, inset 0 0 5px #00ff00;
+            background: linear-gradient(to bottom, #111, #333);
+            margin-top: 20px;
+        }
+        
+        #message {
+            position: absolute;
+            white-space: nowrap;
+            font-size: 6rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #00ff00;
+            letter-spacing: 0.1rem;
+            text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00;
+        }
+        
+        #log {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            height: 150px;
+            overflow-y: scroll;
+            border: 2px solid #444;
+            background: white;
+            padding: 10px;
+            color: black;
+            box-shadow: 0 0 10px #222;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            /* Reducido el tamaño de la fuente */
+        }
+        
+        .log-item {
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+        /* Animación para desplazar el mensaje */
+        
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
     </style>
-  </head>
-  <body>
-    <h1>Información en tiempo real</h1>
-    <div id="events"></div>
+</head>
+
+<body>
+    <header>
+        <h1>SmartCity Notification Center</h1>
+    </header>
+    <div id="tunnel">
+        <div id="message"></div>
+    </div>
+    <div id="log"></div>
+
     <script>
-      const socketUrl = "wss://ws.davinsony.com/ccampos";
+        const socketUrl = "wss://ws.davinsony.com/smartcity";
+        const socket = new WebSocket(socketUrl);
+        const messageDiv = document.getElementById("message");
+        const logDiv = document.getElementById("log");
 
-      const socket = new WebSocket(socketUrl);
+        const messageQueue = []; // Cola de mensajes
+        const logMessages = []; // Para almacenar logs con fecha
+        const maxLogMessages = 100; // Limitar a 100 mensajes en el log
+        let isDisplaying = false; // Controla si se está mostrando un mensaje
 
-      const eventsContainer = document.getElementById("events");
+        // Función para obtener la fecha y hora formateada en Colombia (UTC-5)
+        function formatDate() {
+            const now = new Date();
 
-      // Función para renderizar mensajes en el HTML
-      function renderMessage(message) {
-        // Crear un nuevo elemento div
-        const eventDiv = document.createElement("div");
-        eventDiv.className = "event";
-        eventDiv.textContent = message; // Agregar el contenido del mensaje
-        eventsContainer.appendChild(eventDiv); // Agregar al contenedor
+            const colombiaTime = new Date().toLocaleString("en-US", {
+                timeZone: "America/New_York"
+            })
+            return colombiaTime.toISOString().slice(0, 19).replace('T', ' '); // yyyy-mm-dd hh:mm:ss
+        }
 
-        // Desplazar el contenedor hacia abajo automáticamente
-        eventsContainer.scrollTop = eventsContainer.scrollHeight;
-      }
+        // Función para agregar mensajes al log
+        function addLogMessage(message) {
+            const timestampedMessage = `${formatDate()} - ${message}`;
+            logMessages.unshift(timestampedMessage); // Agregar al inicio
 
-      // Evento: conexión establecida
-      socket.addEventListener("open", () => {
-        console.log("Conexión establecida con el servidor WebSocket");
-        renderMessage("Conexión establecida con el servidor WebSocket");
+            // Limitar el log a 100 mensajes
+            if (logMessages.length > maxLogMessages) {
+                logMessages.pop(); // Eliminar el mensaje más antiguo
+            }
 
-        // Enviar un mensaje de suscripción (opcional)
-        socket.send(
-          JSON.stringify({ action: "subscribe", channel: "mi_canal" })
-        );
-      });
+            // Mostrar el log actualizado
+            renderLog();
+        }
 
-      // Evento: recibir mensaje del servidor
-      socket.addEventListener("message", (event) => {
-        const elementData = JSON.parse(event.data);
+        // Función para mostrar el log
+        function renderLog() {
+            logDiv.innerHTML = ""; // Limpiar el log
+            logMessages.forEach((logMessage) => {
+                const logItem = document.createElement("div");
+                logItem.className = "log-item";
+                logItem.textContent = logMessage;
+                logDiv.appendChild(logItem);
+            });
+        }
 
-        // Renderizar el mensaje en el HTML
-        renderMessage(`Mensaje recibido: ${elementData.msg}`);
-      });
+        // Función para procesar la cola de mensajes
+        async function processQueue() {
+            if (isDisplaying || messageQueue.length === 0) return;
+            isDisplaying = true;
 
-      // Evento: error en la conexión
-      socket.addEventListener("error", (error) => {
-        console.error("Error en la conexión WebSocket:", error);
-        renderMessage("Error en la conexión WebSocket");
-      });
+            const message = messageQueue.shift(); // Obtener el siguiente mensaje
+            displayMessage(message);
 
-      // Evento: conexión cerrada
-      socket.addEventListener("close", (event) => {
-        console.log("Conexión cerrada:", event.reason);
-        renderMessage("Conexión cerrada");
-      });
+            await new Promise((resolve) => {
+                // Esperar el tiempo de la animación antes de procesar el siguiente mensaje
+                setTimeout(() => {
+                    messageDiv.textContent = ""; // Limpiar la pantalla después del mensaje
+                    isDisplaying = false;
+                    resolve();
+                }, 5000); // Duración de la animación (15s)
+            });
+
+            // Procesar el siguiente mensaje
+            processQueue();
+        }
+
+        // Función para mostrar un mensaje en el display
+        function displayMessage(message) {
+            messageDiv.textContent = message;
+
+            // Reiniciar animación
+            messageDiv.style.animation = "none";
+            setTimeout(() => {
+                messageDiv.style.animation = ""; // Volver a activar la animación
+                messageDiv.style.animation = "scroll-left 5s linear 1";
+            });
+        }
+
+        socket.addEventListener("open", () => {
+            console.log("Connection established with WebSocket server");
+            addLogMessage("WebSocket connection established");
+
+            socket.send(
+                JSON.stringify({
+                    action: "subscribe",
+                    channel: "my_channel"
+                })
+            );
+        });
+
+        socket.addEventListener("message", (event) => {
+            const elementData = JSON.parse(event.data);
+            const receivedMessage = elementData.msg;
+
+            // Agregar el mensaje a la cola
+            messageQueue.push(receivedMessage);
+
+            // Registrar el mensaje en el log
+            addLogMessage(receivedMessage);
+
+            // Procesar la cola
+            processQueue();
+        });
+
+        socket.addEventListener("error", (error) => {
+            console.error("WebSocket connection error:", error);
+            const errorMessage = "WebSocket connection error";
+            addLogMessage(errorMessage);
+        });
+
+        socket.addEventListener("close", (event) => {
+            const closeMessage = "Connection closed";
+            console.log(closeMessage, event.reason);
+            addLogMessage(closeMessage);
+        });
     </script>
-  </body>
+</body>
+
 </html>

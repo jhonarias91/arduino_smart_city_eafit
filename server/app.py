@@ -7,7 +7,7 @@ import time
 
 # Configuración del puerto serial RFC2217
 SERIAL_URL = 'rfc2217://localhost:4000'
-SERIAL_PORT = "COM3"
+SERIAL_PORT = "COM5"
 SERIAL_BAUDRATE = 9600
 WEBSOCKET_URL = "wss://ws.davinsony.com/ccampos"
 
@@ -23,10 +23,14 @@ def get_serial_connection():
         ser.timeout = 1
         ser.dtr = False  # Set DTR False before opening to avoid reboot
         ser.open()
+
+        ser.reset_input_buffer()  # Clean in buffer
+        ser.reset_output_buffer()  # Clean output buffer
+
         print(f"Conectado en {SERIAL_URL} a {SERIAL_BAUDRATE} baudios.")
         return ser
     except serial.SerialException as e:
-        print(f"Error al conectar al puerto serial: {e}")
+        #print(f"Error al conectar al puerto serial: {e}")
         return None
 
 @app.route("/realtimes")
@@ -104,9 +108,14 @@ def serial_to_websocket():
         while True:
             try:
                 if ser.in_waiting > 0:  # Hay datos disponibles
-                    line = ser.readline().decode().strip()
+                    line = ser.readline().decode('utf-8', errors='ignore').strip()
                     if line:
-                        ws.send(json.dumps({"msg": line, "to": "ccampos", "from": "ccampos"}))
+                        ## check if line have :
+                        if ":" in line:
+                            print(f"Variable, guardar en db: {line}")
+                        else:
+                            line.split("_")
+                            ws.send(json.dumps({"msg": line, "to": "metropolitana", "from": "ID23"}))
             except serial.SerialException as e:
                 print(f"Error leyendo del puerto serial: {e}")
                 break
@@ -126,7 +135,7 @@ def run_websocket():
 
 # Hilo para ejecutar Flask
 def run_flask():
-    app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5001)
+    app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5000)
 
 if __name__ == "__main__":
     # Ejecuta Flask y WebSocket en hilos separados
