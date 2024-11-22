@@ -10,6 +10,8 @@ SERIAL_URL = 'rfc2217://localhost:4000'
 SERIAL_PORT = "COM5"
 SERIAL_BAUDRATE = 9600
 WEBSOCKET_URL = "wss://ws.davinsony.com/ccampos"
+id = "ID23" #This will be update every mesage
+nightmode = 0
 
 # Inicia Flask
 app = Flask(__name__)
@@ -57,6 +59,9 @@ def index():
     {"id": 12, "name": "lightGreen1IncreaseWhenSensors", "value": "2000"},    
     {"id": 13, "name": "displayRefreshTimeAfterNotification", "value": "4000"},
     {"id": 14, "name": "greenLight1TimeWhenCar", "value": "3000"},
+    {"id": 15, "name": "pedestrian2CrossTime", "value": "4000"},
+    {"id": 16, "name": "pedestrianReduceGreenTime1", "value": "3000"},
+    {"id": 17, "name": "pedestrianReduceGreenTime2", "value": "5000"},
     
 ]
     return render_template("index.html", data=data)
@@ -110,9 +115,11 @@ def serial_to_websocket():
                 if ser.in_waiting > 0:  # Hay datos disponibles
                     line = ser.readline().decode('utf-8', errors='ignore').strip()
                     if line:
+                        idValue = line.split("_")
+                        id = idValue[0] 
                         ## check if line have :
-                        if ":" in line:
-                            print(f"Variable, guardar en db: {line}")
+                        if ":" in line:                            
+                            handleVariable(idValue[1])
                         else:
                             line.split("_")
                             ws.send(json.dumps({"msg": line, "to": "metropolitana", "from": "ID23"}))
@@ -120,6 +127,15 @@ def serial_to_websocket():
                 print(f"Error leyendo del puerto serial: {e}")
                 break
             time.sleep(0.1)
+
+def handleVariable(keyValue):
+    print(f"Variable: {keyValue}")
+    keyValueArray = keyValue.split(":")
+    key = keyValueArray[0]
+    value = keyValueArray[1]
+    if (key == "nightMode"):
+        nightmode = value
+
 
 # Hilo para ejecutar WebSocket
 def run_websocket():

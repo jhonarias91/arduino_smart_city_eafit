@@ -51,6 +51,9 @@ def index():
     {"id": 12, "name": "lightGreen1IncreaseWhenSensors", "value": "2000"},    
     {"id": 13, "name": "displayRefreshTimeAfterNotification", "value": "4000"},
     {"id": 14, "name": "greenLight1TimeWhenCar", "value": "3000"},
+    {"id": 15, "name": "pedestrian2CrossTime", "value": "4000"},
+    {"id": 16, "name": "pedestrianReduceGreenTime1", "value": "3000"},
+    {"id": 17, "name": "pedestrianReduceGreenTime2", "value": "5000"},
     
 ]
     return render_template("index.html", data=data)

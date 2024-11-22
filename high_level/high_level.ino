@@ -23,7 +23,6 @@
 //End middle level
 
 //Constants
-
 const String ID = "ID23";  //ID to identify the device TODO: Change before deploy
 
 // States of the finite state machine (FSM)
@@ -154,8 +153,6 @@ unsigned long timeToSendData = 5000;
 unsigned long timeToSendDataTimeStamp = 0;
 //
 
-
-
 void setup() {
   long unsigned currTime = millis();
   // Output pin config
@@ -202,78 +199,41 @@ void loop() {
   sendDataToServer();
 }
 
-long i=0;
 void sendDataToServer() {
   unsigned long currTime = millis();
   if (currTime - timeToSendDataTimeStamp > timeToSendData) {
     timeToSendDataTimeStamp = currTime;  
     
+    sendVariableToSerial("greenTime1", greenTime1);
+    sendVariableToSerial("greenTime2", greenTime2);
+    sendVariableToSerial("yellowTime", yellowTime);
+    sendVariableToSerial("blinkTime", blinkTime);
+    sendVariableToSerial("totalBlinksInOut", totalBlinksInOut);
+    sendVariableToSerial("pedestrianReduceGreenTime1", pedestrianReduceGreenTime1);
+    sendVariableToSerial("lightGreen2IncreaseWhenSensors", lightGreen2IncreaseWhenSensors);
+    sendVariableToSerial("priorityWaitingTimeOnLight2", priorityWaitingTimeOnLight2);
+    sendVariableToSerial("priorityWaitingTimeOnLight1", priorityWaitingTimeOnLight1);
+    sendVariableToSerial("lightGreen1IncreaseWhenSensors", lightGreen1IncreaseWhenSensors);
+    sendVariableToSerial("displayRefreshTimeAfterNotification", displayRefreshTimeAfterNotification);
+    sendVariableToSerial("greenLight1TimeWhenCar", greenLight1TimeWhenCar);
+    sendVariableToSerial("pedestrian1CrossTime", pedestrian1CrossTime);
+    sendVariableToSerial("co2GreenTime2", co2GreenTime2);
+    
+  }
+}
+
+void sendVariableToSerial(String key, int value){
     char buffer[50]; // Buffer to hold the formatted string
-    sprintf(buffer, "ID23_greenTime1:%d", i); // Format the string
+    sprintf(buffer, "%s_%s:%d", ID, key, value); // Format the string
     String data = String(buffer); // Convert to Arduino String if needed
     Serial.println(data);
-    i++;
-    sprintf(buffer, "greenTime2:%d", i); // Format the string
-    data = String(buffer); // Convert to Arduino String if needed
+}
+
+void sendNotificationToSerial(String value){
+    char buffer[50]; // Buffer to hold the formatted string
+    sprintf(buffer, "%s_%s", ID, value); // Format the string
+    String data = String(buffer); // Convert to Arduino String if needed
     Serial.println(data);
-    i++;
-
-    //Serial.print(greenTime1);
-    //Serial.print("\n");
-/*
-    Serial.print("greenTime2_");
-    Serial.print(greenTime2);
-    Serial.print("\n");
-
-    Serial.print("yellowTime_");
-    Serial.print(yellowTime);
-    Serial.print("\n");
-
-    Serial.print("blinkTime_");
-    Serial.print(blinkTime);
-    Serial.print("\n");
-
-    Serial.print("totalBlinksInOut_");
-    Serial.print(totalBlinksInOut);
-    Serial.print("\n");
-
-    Serial.print("pedestrianReduceGreenTime1_");
-    Serial.print(pedestrianReduceGreenTime1);
-    Serial.print("\n");
-
-    Serial.print("lightGreen2IncreaseWhenSensors_");
-    Serial.print(lightGreen2IncreaseWhenSensors);
-    Serial.print("\n");
-
-    Serial.print("priorityWaitingTimeOnLight2_");
-    Serial.print(priorityWaitingTimeOnLight2);
-    Serial.print("\n");
-
-    Serial.print("priorityWaitingTimeOnLight1_");
-    Serial.print(priorityWaitingTimeOnLight1);
-    Serial.print("\n");
-
-    Serial.print("lightGreen1IncreaseWhenSensors_");
-    Serial.print(lightGreen1IncreaseWhenSensors);
-    Serial.print("\n");
-
-    Serial.print("displayRefreshTimeAfterNotification_");
-    Serial.print(displayRefreshTimeAfterNotification);
-    Serial.print("\n");
-
-    Serial.print("greenLight1TimeWhenCar_");
-    Serial.print(greenLight1TimeWhenCar);
-    Serial.print("\n");
-
-    Serial.print("pedestrianCrossTime_");
-    Serial.print(pedestrian1CrossTime);
-    Serial.print("\n");
-
-    Serial.print("co2GreenTime2_");
-    Serial.print(co2GreenTime2);
-    Serial.print("\n");
-    */
-  }
 }
 
 void showData() {
@@ -327,9 +287,21 @@ void readSerial() {
           greenLight1TimeWhenCar = value;
         } else if (idStr.equalsIgnoreCase("pedestrian1CrossTime")) {
           pedestrian1CrossTime = value;
-        } else if (idStr.equalsIgnoreCase("co2GreenTime2")) {
+          originalPedestrian1CrossTime = value;
+        } else if (idStr.equalsIgnoreCase("pedestrian2CrossTime")) {
+          pedestrian2CrossTime = value;
+        }else if (idStr.equalsIgnoreCase("pedestrianReduceGreenTime1")) {
+          pedestrianReduceGreenTime1 = value;
+          originalPedestrianReduceGreenTime1 = value;
+        }else if (idStr.equalsIgnoreCase("pedestrianReduceGreenTime2")) {
+          pedestrianReduceGreenTime2 = value;
+          originalPedestrianReduceGreenTime2 = value;
+        }        
+        else if (idStr.equalsIgnoreCase("co2GreenTime2")) {
           co2GreenTime2 = value;
         }
+
+        pedestrianReduceGreenTime1
 
         // Show the value
         display.setCursor(0, 3);
@@ -367,8 +339,10 @@ void checkNighMode() {
     //Enter night mode, check both sensors to resilience and avoid mistakes
     if (vLDR2 < 60 && vLDR1 < 60) {
       nightMode = true;
-    } else {
+      sendVariableToSerial("nightMode", 1);
+    } else {      
       nightMode = false;
+      sendVariableToSerial("nightMode", 0);
     }
   }
 }
@@ -388,7 +362,6 @@ void checkForLigh1ActiveSensors() {
 
     // Check if 2 or 3 sensors are active and priority is not already set
     if (totalSensors > 0 && !light1IsPriority && !light1WaitingForGreenStatus && currTime - lastPriorityTimeOnLight1 > priorityWaitingTimeOnLight1) {
-
       nightMode = false;
       light1WaitingForGreenStatus = true;
       lastLight1TotalSensors = totalSensors;
@@ -396,6 +369,7 @@ void checkForLigh1ActiveSensors() {
       totalTimesWhenLight1Priority = totalSensors;
       //With this we can increase the green reduce time when the sensors are active
       pedestrianReduceGreenTime1 = pedestrianReduceGreenTime1 + lightGreen1IncreaseWhenSensors;
+      sendNotificationToSerial("Semaforo 1 Preparando  prioridad");
     }
   }
 
@@ -408,6 +382,7 @@ void checkForLigh1ActiveSensors() {
       originalGreen1Time = greenTime1;
       greenTime1 += lightGreen1IncreaseWhenSensors;
 
+      sendNotificationToSerial("Semaforo 1 con prioridad");
       display.setCursor(0, 1);
       display.print("Prio ");
       display.print(lastLight1TotalSensors);
@@ -425,7 +400,8 @@ void checkForLigh1ActiveSensors() {
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight1 = currTime;
       greenTime1 = originalGreen1Time;
-     pedestrianReduceGreenTime1 = originalPedestrianReduceGreenTime1;
+      pedestrianReduceGreenTime1 = originalPedestrianReduceGreenTime1;
+     sendNotificationToSerial("Semaforo 1 fin prioridad");
     }
   }
   previousState = state;
@@ -449,7 +425,8 @@ void checkForLigh2ActiveSensors() {
       light2WaitingForGreenStatus = true;
       lastLight2TotalSensors = totalSensors;
       isExternalRequestingLights = true;
-      totalTimesWhenLight2Priority = totalSensors;     
+      totalTimesWhenLight2Priority = totalSensors;  
+      sendNotificationToSerial("Semaforo 2 Preparando prioridad");   
     }
   }
 
@@ -462,7 +439,7 @@ void checkForLigh2ActiveSensors() {
       greenTime2 = greenTime2 + lightGreen2IncreaseWhenSensors + getTimeForCO2Sensor();
       //With this we can increase the green reduce time when the sensors are active
       pedestrianReduceGreenTime2 = pedestrianReduceGreenTime2 + lightGreen2IncreaseWhenSensors + getTimeForCO2Sensor();
-
+      sendNotificationToSerial("Semaforo 2 con prioridad");
       Serial.println(greenTime2);
       display.setCursor(0, 1);
       display.print("Prio ");
@@ -483,26 +460,25 @@ void checkForLigh2ActiveSensors() {
       isExternalRequestingLights = false;
       lastPriorityTimeOnLight2 = currTime;
       greenTime2 = originalGreen2Time;
-      //display.setCursor(0, 1); todo: check if needed
-      //display.print("                  ");
+      pedestrianReduceGreenTime2 = originalPedestrianReduceGreenTime2;
+      sendNotificationToSerial("Semaforo 2 fin prioridad");
     }
   }
   previousStateLight2 = state;  //Update the previous state with current
 }
 
 void setPedestrian1Pulser() {
-
   vP1 = digitalRead(P1);
   if (!p1IsCrossing && !p2IsCrossing) {  //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
     if (vP1 == HIGH) {
       pedestrian1WaitingForPriority = true;
       isExternalRequestingLights = true;
-
+      sendNotificationToSerial("Peaton 1 esperando prioridad");
       //remaining time
       unsigned long remainingGreenTime1 = greenTime1 - (millis() - timeStamp);
       if (remainingGreenTime1 > pedestrianReduceGreenTime1) {
         //Save the current time for the green
-         lastGreenTime1 = greenTime1;
+        lastGreenTime1 = greenTime1;
         //Decrease the time for the pedestrian to cross
         greenTime1 = pedestrianReduceGreenTime1;
       }
@@ -519,10 +495,9 @@ void setPedestrian1Pulser() {
     }else{
       greenTime2 = greenTime2 + pedestrian1CrossTime/2;  //Increase just the half
     }
-
+    sendNotificationToSerial("Peaton 1 cruzando");
     pedestrian1WaitingForPriority = false;
-    display.setCursor(0, 0);
-    display.print("Pedestrian1 crossing");
+    display.setCursor(0, 0);   
     setNotificationWaitingTime();
   }
 
@@ -533,7 +508,7 @@ void setPedestrian1Pulser() {
     //Set the greentime1 to the original value after the pedestrian has crossed
     greenTime1 = lastGreenTime1;
     isExternalRequestingLights = false;
-    Serial.println("Gracias por cuidarte!");
+    sendNotificationToSerial("Gracias por cuidarte!");
   }
 }
 
@@ -544,7 +519,7 @@ void setPedestrian2Pulser() {
     if (vP2 == HIGH) {
       pedestrian2WaitingForPriority = true;
       isExternalRequestingLights = true;
-
+      sendNotificationToSerial("Peaton 2 esperando prioridad");
       //If the remaining time for the light 2 is greather than the pedestrianReduceGreenTime2, we reduce the waiting time.
       //TODO: Check the sensors and the CO2 emmiter. this for high level
       unsigned long remainingGreenTime2 = greenTime2 - (millis() - timeStamp);
@@ -567,6 +542,7 @@ void setPedestrian2Pulser() {
     display.setCursor(0, 0);
     display.print("Pedestrian2 crossing");    
     setNotificationWaitingTime();
+    sendNotificationToSerial("Peaton 2 cruzando");
   }
 
   //After the time had been reach, we set the original time again
@@ -576,7 +552,7 @@ void setPedestrian2Pulser() {
     //Set the greentime1 to the original value after the pedestrian has crossed
     greenTime1 = originalGreen1Time;
     isExternalRequestingLights = false;
-    Serial.println("Gracias por cuidarte!");
+    sendNotificationToSerial("Gracias por cuidarte!");
   }
   previousStatePedestrian2 = state;
 }
@@ -711,6 +687,7 @@ void trafficLightFSM() {
       if (millis() - timeStamp >= greenTime1) {
         state = STATE_LIGHT1_GREEN_BLINK;
         timeStamp = millis();
+        sendVariableToSerial("state", state);
       }
       break;
 
@@ -727,6 +704,7 @@ void trafficLightFSM() {
         blinks = 0;
         state = STATE_LIGHT1_YELLOW_ON;
         timeStamp = millis();
+        sendVariableToSerial("state", state);;
       }
       break;
 
@@ -739,6 +717,7 @@ void trafficLightFSM() {
       if (millis() - timeStamp > yellowTime) {
         state = STATE_LIGHT_RED1_ON;
         timeStamp = millis();
+        sendVariableToSerial("state", state);
       }
       break;
 
@@ -754,6 +733,7 @@ void trafficLightFSM() {
       if (millis() - timeStamp > yellowTime) {
         state = STATE_LIGHT2_GREEN_ON;
         timeStamp = millis();
+        sendVariableToSerial("state", state);
       }
       break;
 
@@ -766,6 +746,7 @@ void trafficLightFSM() {
       if (millis() - timeStamp > greenTime2) {
         state = nightMode ? STATE_LIGHT_NIGHT_MODE : STATE_LIGHT2_GREEN_BLINK;
         timeStamp = millis();
+        sendVariableToSerial("state", state);
       }
       break;
 
@@ -782,6 +763,7 @@ void trafficLightFSM() {
         blinks = 0;
         state = STATE_LIGHT2_YELLOW_ON;
         timeStamp = millis();
+        sendVariableToSerial("state", state);
       }
       break;
 
@@ -794,6 +776,7 @@ void trafficLightFSM() {
       if (millis() - timeStamp > yellowTime) {
         state = STATE_LIGHT1_GREEN_ON_START;
         timeStamp = millis();
+        sendVariableToSerial("state", state);
       }
       break;
 
@@ -804,6 +787,7 @@ void trafficLightFSM() {
 
       if (!nightMode) {
         state = STATE_LIGHT2_GREEN_ON;  // Return to normal operation
+        sendVariableToSerial("state", state);
       }
       break;
   }
