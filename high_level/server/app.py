@@ -138,7 +138,7 @@ def handleVariable(keyValue):
         # Enviar el estado de nightMode al frontend
         if ws:
             ws.send(json.dumps({"msg": keyValue, "to": "metropolitana", "from": id, "key": "nightMode", "value": value}))
-
+            save_to_database(key, value)
 
 
 # Hilo para ejecutar WebSocket
@@ -167,3 +167,33 @@ if __name__ == "__main__":
 
     flask_thread.join()
     websocket_thread.join()
+
+# Configuración de la conexión a MySQL
+db_config = {
+    "host": "database-1.cd0uas88ikvu.us-east-1.rds.amazonaws.com",
+    "user": "admin",
+    "password": "smartcity",
+    "database": "smartcity"
+}
+
+def save_to_database(key, value):
+    try:
+        # Establecer conexión con la base de datos
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # Consulta SQL para insertar datos
+        query = "INSERT INTO logs (key_name, key_value) VALUES (%s, %s)"
+        cursor.execute(query, (key, value))
+
+        # Confirmar la transacción
+        connection.commit()
+
+        print(f"Guardado en la base de datos: {key} -> {value}")
+    except mysql.connector.Error as err:
+        print(f"Error al guardar en la base de datos: {err}")
+    finally:
+        # Cerrar la conexión
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
