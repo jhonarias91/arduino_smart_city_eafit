@@ -181,7 +181,7 @@ void setup() {
   display.init();
   display.backlight();
   timeStamp = currTime;
-  Serial.begin(9600);
+  Serial.begin(115200);
   lightSensorTimeStamp = currTime;
   light2IsPriority = false;
   nightMode = false;
