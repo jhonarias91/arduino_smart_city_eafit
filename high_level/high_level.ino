@@ -286,8 +286,7 @@ void readSerial() {
         } else if (idStr.equalsIgnoreCase("greenLight1TimeWhenCar")) {
           greenLight1TimeWhenCar = value;
         } else if (idStr.equalsIgnoreCase("pedestrian1CrossTime")) {
-          pedestrian1CrossTime = value;
-          originalPedestrian1CrossTime = value;
+          pedestrian1CrossTime = value;          
         } else if (idStr.equalsIgnoreCase("pedestrian2CrossTime")) {
           pedestrian2CrossTime = value;
         }else if (idStr.equalsIgnoreCase("pedestrianReduceGreenTime1")) {
@@ -300,9 +299,6 @@ void readSerial() {
         else if (idStr.equalsIgnoreCase("co2GreenTime2")) {
           co2GreenTime2 = value;
         }
-
-        pedestrianReduceGreenTime1
-
         // Show the value
         display.setCursor(0, 3);
         display.print("                    ");  // Clean the display
