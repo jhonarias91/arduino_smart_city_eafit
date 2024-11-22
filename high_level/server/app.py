@@ -13,19 +13,22 @@ SERIAL_BAUDRATE = 115200
 id = "id23" #This will be update every mesage
 WEBSOCKET_URL = "wss://ws.davinsony.com/"+id
 nightmode = 0
+ser = None
 
 # Inicia Flask
 app = Flask(__name__)
 
 # Inicializa conexión serial
 def get_serial_connection():
+    global ser
     try:
-        ser = serial.Serial()
-        ser.port = SERIAL_PORT
-        ser.baudrate = SERIAL_BAUDRATE
-        ser.timeout = 1
-        ser.dtr = False  # Set DTR False before opening to avoid reboot
-        ser.open()
+        if (ser == None):
+            ser = serial.Serial()
+            ser.port = SERIAL_PORT
+            ser.baudrate = SERIAL_BAUDRATE
+            ser.timeout = 1
+            ser.dtr = False  # Set DTR False before opening to avoid reboot
+            ser.open()
 
         ser.reset_input_buffer()  # Clean in buffer
         ser.reset_output_buffer()  # Clean output buffer
@@ -81,7 +84,6 @@ def update_value():
             print(f"Enviado: {name}:{value}")
             return jsonify({"status": "success", "message": f"{name} actualizado a {value}"})
         finally:
-            ser.close()
             print("Puerto serial cerrado.")
     else:
         return jsonify({"status": "error", "message": "No se pudo abrir el puerto serial"}), 500
@@ -92,9 +94,9 @@ def on_message(ws, message):
     print(f"Mensaje recibido: {data}")
     ser = get_serial_connection()
     if ser:
+        print(f"Enviado a {id}_data{data}")
         ser.write((data["msg"] + "\n").encode())
-        ser.close()
-
+        
 def on_error(ws, error):
     print(f"Error WebSocket: {error}")
 
@@ -126,7 +128,6 @@ def serial_to_websocket():
                 print(f"Error leyendo del puerto serial: {e}")
                 break
             time.sleep(0.1)
-
 
 def handleVariable(keyValue):
     print(f"Variable: {keyValue}")
