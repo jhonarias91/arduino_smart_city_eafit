@@ -307,6 +307,8 @@ void checkForLigh1ActiveSensors() {
       greenTime1 += lightGreen1IncreaseWhenSensors;
 
       display.setCursor(0, 1);
+      display.print("                    ");
+      display.setCursor(0, 1);
       display.print("Prio ");
       display.print(lastLight1TotalSensors);
       display.print(" Sensors-C:");
@@ -343,7 +345,6 @@ void checkForLigh2ActiveSensors() {
 
     int totalSensors = 3 - (vCNY4 + vCNY5 + vCNY6);
 
-
     if (totalSensors > 0 && !light2IsPriority && !light2WaitingForGreenStatus
         && currTime - lastPriorityTimeOnLight2 > priorityWaitingTimeOnLight2) {
 
@@ -361,7 +362,7 @@ void checkForLigh2ActiveSensors() {
       light2WaitingForGreenStatus = false;
       originalGreen2Time = greenTime2;
       greenTime2 = greenTime2 + lightGreen2IncreaseWhenSensors + getTimeForCO2Sensor();
-      Serial.println(greenTime2);
+      Serial.println("Priority on L2");
       display.setCursor(0, 1);
       display.print("Prio ");
       display.print(lastLight2TotalSensors);
