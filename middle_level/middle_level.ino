@@ -337,7 +337,7 @@ void setPedestrian1Pulser() {
     if (vP1 == HIGH) {
       pedestrian1WaitingForRedStatus = true;
       isExternalRequestingLights = true;
-
+      Serial.println("Peaton solicita paso semaforo 1");
       //remaining time
       unsigned long remainingGreenTime1 = greenTime1 - (millis() - timeStamp);
       if (remainingGreenTime1 > pedestrianReduceGreenTime1) {
@@ -401,26 +401,18 @@ void showDataInDisplay() {
   display.setCursor(0, 2);
   display.print("CO2        CNY 4 5 6");
   display.setCursor(0, 3);
-  display.print("L1   L2            ");
-  display.setCursor(5, 0);
-  display.print(vLDR1);
-  display.setCursor(5, 1);
-  display.print(vLDR2);
-  display.setCursor(5, 2);
-  display.print(vCO2);
-  showGreenTimes();
-  display.setCursor(15, 1);
-  display.print(1 * vCNY1);
-  display.setCursor(17, 1);
-  display.print(1 * vCNY2);
-  display.setCursor(19, 1);
-  display.print(1 * vCNY3);
-  display.setCursor(15, 3);
-  display.print(1 * vCNY4);
-  display.setCursor(17, 3);
-  display.print(1 * vCNY5);
-  display.setCursor(19, 3);
-  display.print(1 * vCNY6);
+  display.print("P1   P2            ");
+  display.setCursor(5, 0); display.print(vLDR1);
+  display.setCursor(5, 1); display.print(vLDR2);
+  display.setCursor(5, 2); display.print(vCO2);
+  display.setCursor(3, 3); display.print(1 * vP1);
+  display.setCursor(8, 3); display.print(1 * vP2);
+  display.setCursor(15, 1); display.print(1 * vCNY1);
+  display.setCursor(17, 1); display.print(1 * vCNY2);
+  display.setCursor(19, 1); display.print(1 * vCNY3);
+  display.setCursor(15, 3); display.print(1 * vCNY4);
+  display.setCursor(17, 3); display.print(1 * vCNY5);
+  display.setCursor(19, 3); display.print(1 * vCNY6);
 }
 
 void showGreenTimes() {
