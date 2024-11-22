@@ -138,7 +138,7 @@ def handleVariable(keyValue):
         nightmode = int(value)
         # Enviar el estado de nightMode al frontend
         if ws:
-            ws.send(json.dumps({"msg": keyValue, "to": "metropolitana", "from": id, "key": "nightMode", "value": value}))
+            ws.send(json.dumps({"msg": keyValue, "to": "metropolitana", "from": id, "key": "nightMode", "value": nightmode}))
 
 # Hilo para ejecutar WebSocket
 def run_websocket():
