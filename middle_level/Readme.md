@@ -1,10 +1,16 @@
 ## Middle Level
 
-Este sistema ciberfísico (CPS) amplía las funcionalidades de control de semáforos para automóviles y peatones, 
-integrando múltiples sensores infrarrojos y sensores de luz. El sistema ajusta 
-dinámicamente los tiempos de las luces según la detección de vehículos, 
-la intensidad de la luz ambiente y las solicitudes de cruce de peatones. 
-También implementa un modo nocturno.
+Incluye todo lo del low level, adicionalmente implementa un display para mostrar los datos cada segundo, como los valores de algunos sensores
+y el tiempo en verde pendiente de cada semáforo, además soporta comunicación por serial para parametrizar y enviar valores a la nube y mostrar
+los distintos mensajes que se impriman. 
+
+Adicionalmente, tiene una lógica más robusta que el de low level en cuanto a:
+- Si hay prioridad sobre el semáforo 1, se incrementa el tiempo de redución del verde cuando el peatón solicita vía en función del tiempo
+por incremento por cuando se tiene prelacion sobre este.
+- Si hay prioridad sobre semáforo 1, el tiempo en rojo del peatón solo se incrementa en la mitad establecida.
+- Si hay prioridad sobre el semáforo 2, se incrementa el tiempo de redución del verde cuando el peatón solicita vía en función 
+del tiempo por incremento por cuando se tiene prelacion sobre este y los niveles de CO2.
+- Si hay prioridad sobre semáforo 2, el tiempo en rojo del peatón no se incrementa, debido a que es vía arterial y tenemos un tunel.
 
 ## Entradas y Salidas
 ### Entradas:
