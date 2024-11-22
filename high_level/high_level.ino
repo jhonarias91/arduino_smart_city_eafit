@@ -222,13 +222,13 @@ void sendDataToServer() {
 }
 
 void sendVariableToSerial(const char* key, int value) {
-    char buffer[50]; // Ensure the buffer is large enough
+    char buffer[80]; // Ensure the buffer is large enough
     snprintf(buffer, sizeof(buffer), "%s_%s:%d", ID, key, value); // Use snprintf for safety
     Serial.println(buffer); // Directly send the char buffer
 }
 
 void sendNotificationToSerial(const char* value) {
-    char buffer[50]; // Ensure the buffer is large enough
+    char buffer[80]; // Ensure the buffer is large enough
     snprintf(buffer, sizeof(buffer), "%s_%s", ID, value); // Use snprintf for safety
     Serial.println(buffer); // Directly send the char buffer
 }
