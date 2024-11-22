@@ -1,27 +1,43 @@
 from flask import Flask, request, jsonify, render_template
 import serial
+import websocket
+import json
+import threading
 import time
 
+# Configuración del puerto serial RFC2217
+SERIAL_URL = 'rfc2217://localhost:4000'
+SERIAL_PORT = "COM3"
+SERIAL_BAUDRATE = 9600
+WEBSOCKET_URL = "wss://ws.davinsony.com/ccampos"
+
+# Inicia Flask
 app = Flask(__name__)
 
-# Inicializa la conexión serial con el Arduino
+# Inicializa conexión serial
 def get_serial_connection():
     try:
         ser = serial.Serial()
-        ser.port = "COM3"
-        ser.baudrate = 9600
+        ser.port = SERIAL_PORT
+        ser.baudrate = SERIAL_BAUDRATE
         ser.timeout = 1
         ser.dtr = False  # Set DTR False before opening to avoid reboot
         ser.open()
-        print("Conectado al puerto COM5 a 9600 baudios.")
+        print(f"Conectado en {SERIAL_URL} a {SERIAL_BAUDRATE} baudios.")
         return ser
     except serial.SerialException as e:
         print(f"Error al conectar al puerto serial: {e}")
         return None
 
+@app.route("/realtimes")
+def realtime():
+    data = []
+    return render_template("real.html", data=data)
+
+# Configura los datos iniciales
 @app.route("/")
 def index():
-    # Initial data, TODO: Read from Arduino
+   
     data = [
     {"id": 1, "name": "greenTime1", "value": "2000"},
     {"id": 2, "name": "greenTime2", "value": "4000"},
@@ -43,7 +59,7 @@ def index():
 
 @app.route("/update", methods=["POST"])
 def update_value():
-    data = request.json  # Get the data from front
+    data = request.json  # Obtiene los datos del frontend
     name = data.get("name")
     value = data.get("value")
 
@@ -62,5 +78,63 @@ def update_value():
     else:
         return jsonify({"status": "error", "message": "No se pudo abrir el puerto serial"}), 500
 
+# WebSocket callbacks
+def on_message(ws, message):
+    data = json.loads(message)
+    print(f"Mensaje recibido: {data}")
+    ser = get_serial_connection()
+    if ser:
+        ser.write((data["msg"] + "\n").encode())
+        ser.close()
+
+def on_error(ws, error):
+    print(f"Error WebSocket: {error}")
+
+def on_close(ws, close_status_code, close_msg):
+    print(f"Conexión WebSocket cerrada. Código: {close_status_code}, Mensaje: {close_msg}")
+
+def on_open(ws):
+    print("Conexión WebSocket abierta.")
+    threading.Thread(target=serial_to_websocket, daemon=True).start()
+
+# Lee datos seriales y los envía al WebSocket
+def serial_to_websocket():
+    ser = get_serial_connection()
+    if ser:
+        while True:
+            try:
+                if ser.in_waiting > 0:  # Hay datos disponibles
+                    line = ser.readline().decode().strip()
+                    if line:
+                        ws.send(json.dumps({"msg": line, "to": "ccampos", "from": "ccampos"}))
+            except serial.SerialException as e:
+                print(f"Error leyendo del puerto serial: {e}")
+                break
+            time.sleep(0.1)
+
+# Hilo para ejecutar WebSocket
+def run_websocket():
+    global ws
+    ws = websocket.WebSocketApp(
+        WEBSOCKET_URL,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close,
+        on_open=on_open
+    )
+    ws.run_forever(sslopt={"cert_reqs": 0})
+
+# Hilo para ejecutar Flask
+def run_flask():
+    app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5001)
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Ejecuta Flask y WebSocket en hilos separados
+    flask_thread = threading.Thread(target=run_flask)
+    websocket_thread = threading.Thread(target=run_websocket)
+
+    flask_thread.start()
+    websocket_thread.start()
+
+    flask_thread.join()
+    websocket_thread.join()

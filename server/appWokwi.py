@@ -21,7 +21,7 @@ if not hasattr(serial, 'serial_for_url'):
 def get_serial_connection():
     try:
         ser = serial.serial_for_url(SERIAL_URL, baudrate=SERIAL_BAUDRATE, timeout=1)
-        print(f"Conectado al servidor RFC2217 en {SERIAL_URL} a {SERIAL_BAUDRATE} baudios.")
+        print(f"Conectado en {SERIAL_URL} a {SERIAL_BAUDRATE} baudios.")
         return ser
     except serial.SerialException as e:
         print(f"Error al conectar al puerto serial: {e}")
