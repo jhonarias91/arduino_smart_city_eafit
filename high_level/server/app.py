@@ -4,12 +4,13 @@ import websocket
 import json
 import threading
 import time
+import mysql.connector
 
 # Configuración del puerto serial RFC2217
 #SERIAL_URL = 'rfc2217://localhost:4000'
-SERIAL_PORT = "COM5"
+SERIAL_PORT = "COM8"
 SERIAL_BAUDRATE = 115200
-id = "id23" #This will be update every mesage
+id = "id24" #This will be update every mesage
 WEBSOCKET_URL = "wss://ws.davinsony.com/"+id
 nightmode = 0
 
@@ -132,14 +133,12 @@ def handleVariable(keyValue):
     keyValueArray = keyValue.split(":")
     key = keyValueArray[0]
     value = keyValueArray[1]
-
+    saveToDatabase(id, key, value)
     if key == "nightMode":
         nightmode = int(value)
         # Enviar el estado de nightMode al frontend
         if ws:
             ws.send(json.dumps({"msg": keyValue, "to": "metropolitana", "from": id, "key": "nightMode", "value": value}))
-            save_to_database(key, value)
-
 
 # Hilo para ejecutar WebSocket
 def run_websocket():
@@ -157,17 +156,6 @@ def run_websocket():
 def run_flask():
     app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5000)
 
-if __name__ == "__main__":
-    # Ejecuta Flask y WebSocket en hilos separados
-    flask_thread = threading.Thread(target=run_flask)
-    websocket_thread = threading.Thread(target=run_websocket)
-
-    flask_thread.start()
-    websocket_thread.start()
-
-    flask_thread.join()
-    websocket_thread.join()
-
 # Configuración de la conexión a MySQL
 db_config = {
     "host": "database-1.cd0uas88ikvu.us-east-1.rds.amazonaws.com",
@@ -176,15 +164,15 @@ db_config = {
     "database": "smartcity"
 }
 
-def save_to_database(key, value):
+def saveToDatabase(clientId, key, value):
     try:
         # Establecer conexión con la base de datos
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
         # Consulta SQL para insertar datos
-        query = "INSERT INTO logs (key_name, key_value) VALUES (%s, %s)"
-        cursor.execute(query, (key, value))
+        query = "INSERT INTO logs (client_id, key_name, key_value) VALUES (%s, %s, %s)"
+        cursor.execute(query, (clientId, key, value))
 
         # Confirmar la transacción
         connection.commit()
@@ -197,3 +185,14 @@ def save_to_database(key, value):
         if connection.is_connected():
             cursor.close()
             connection.close()
+
+if __name__ == "__main__":
+    # Ejecuta Flask y WebSocket en hilos separados
+    flask_thread = threading.Thread(target=run_flask)
+    websocket_thread = threading.Thread(target=run_websocket)
+
+    flask_thread.start()
+    websocket_thread.start()
+
+    flask_thread.join()
+    websocket_thread.join()
