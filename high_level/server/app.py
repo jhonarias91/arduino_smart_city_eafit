@@ -8,9 +8,9 @@ import mysql.connector
 
 # Configuración del puerto serial RFC2217
 #SERIAL_URL = 'rfc2217://localhost:4000'
-SERIAL_PORT = "COM8"
+SERIAL_PORT = "COM5"
 SERIAL_BAUDRATE = 115200
-id = "id24" #This will be update every mesage
+id = "id23" #This will be update every mesage
 WEBSOCKET_URL = "wss://ws.davinsony.com/"+id
 nightmode = 0
 
