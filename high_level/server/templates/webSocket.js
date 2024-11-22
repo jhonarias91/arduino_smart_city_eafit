@@ -1,4 +1,4 @@
-const socketUrl = "wss://ws.davinsony.com/ccampos";
+const socketUrl = "wss://ws.davinsony.com/metropolitana";
 
 const socket = new WebSocket(socketUrl);
 

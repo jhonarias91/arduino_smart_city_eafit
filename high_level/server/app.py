@@ -6,11 +6,11 @@ import threading
 import time
 
 # Configuración del puerto serial RFC2217
-SERIAL_URL = 'rfc2217://localhost:4000'
+#SERIAL_URL = 'rfc2217://localhost:4000'
 SERIAL_PORT = "COM5"
-SERIAL_BAUDRATE = 9600
-WEBSOCKET_URL = "wss://ws.davinsony.com/ccampos"
-id = "ID23" #This will be update every mesage
+SERIAL_BAUDRATE = 115200
+id = "id23" #This will be update every mesage
+WEBSOCKET_URL = "wss://ws.davinsony.com/"+id
 nightmode = 0
 
 # Inicia Flask
@@ -28,8 +28,6 @@ def get_serial_connection():
 
         ser.reset_input_buffer()  # Clean in buffer
         ser.reset_output_buffer()  # Clean output buffer
-
-        print(f"Conectado en {SERIAL_URL} a {SERIAL_BAUDRATE} baudios.")
         return ser
     except serial.SerialException as e:
         #print(f"Error al conectar al puerto serial: {e}")
@@ -115,14 +113,14 @@ def serial_to_websocket():
                 if ser.in_waiting > 0:  # Hay datos disponibles
                     line = ser.readline().decode('utf-8', errors='ignore').strip()
                     if line:
+                        print(line);
                         idValue = line.split("_")
                         id = idValue[0] 
                         ## check if line have :
                         if ":" in line:                            
                             handleVariable(idValue[1])
                         else:
-                            line.split("_")
-                            ws.send(json.dumps({"msg": line, "to": "metropolitana", "from": id}))
+                            ws.send(json.dumps({"msg": idValue[1], "to": "metropolitana", "from": id}))
             except serial.SerialException as e:
                 print(f"Error leyendo del puerto serial: {e}")
                 break

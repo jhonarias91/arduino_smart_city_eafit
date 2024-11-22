@@ -23,7 +23,7 @@
 //End middle level
 
 //Constants
-const String ID = "ID23";  //ID to identify the device TODO: Change before deploy
+const char* ID = "id23";  //ID to identify the device TODO: Change before deploy
 
 // States of the finite state machine (FSM)
 const int STATE_LIGHT1_GREEN_ON_START = 0;  // Traffic light 1 green light on at start and light 2 red on
@@ -149,7 +149,7 @@ unsigned long co2GreenTime2 = 20000;
 //End CO2
 
 //Sending to server
-unsigned long timeToSendData = 5000;
+unsigned long timeToSendData = 1000*60;
 unsigned long timeToSendDataTimeStamp = 0;
 //
 
@@ -178,7 +178,7 @@ void setup() {
   display.init();
   display.backlight();
   timeStamp = currTime;
-  Serial.begin(9600);
+  Serial.begin(115200);
   lightSensorTimeStamp = currTime;
   light2IsPriority = false;
   nightMode = false;
@@ -218,22 +218,19 @@ void sendDataToServer() {
     sendVariableToSerial("greenLight1TimeWhenCar", greenLight1TimeWhenCar);
     sendVariableToSerial("pedestrian1CrossTime", pedestrian1CrossTime);
     sendVariableToSerial("co2GreenTime2", co2GreenTime2);
-    
   }
 }
 
-void sendVariableToSerial(String key, int value){
-    char buffer[50]; // Buffer to hold the formatted string
-    sprintf(buffer, "%s_%s:%d", ID, key, value); // Format the string
-    String data = String(buffer); // Convert to Arduino String if needed
-    Serial.println(data);
+void sendVariableToSerial(const char* key, int value) {
+    char buffer[50]; // Ensure the buffer is large enough
+    snprintf(buffer, sizeof(buffer), "%s_%s:%d", ID, key, value); // Use snprintf for safety
+    Serial.println(buffer); // Directly send the char buffer
 }
 
-void sendNotificationToSerial(String value){
-    char buffer[50]; // Buffer to hold the formatted string
-    sprintf(buffer, "%s_%s", ID, value); // Format the string
-    String data = String(buffer); // Convert to Arduino String if needed
-    Serial.println(data);
+void sendNotificationToSerial(const char* value) {
+    char buffer[50]; // Ensure the buffer is large enough
+    snprintf(buffer, sizeof(buffer), "%s_%s", ID, value); // Use snprintf for safety
+    Serial.println(buffer); // Directly send the char buffer
 }
 
 void showData() {
@@ -436,7 +433,6 @@ void checkForLigh2ActiveSensors() {
       //With this we can increase the green reduce time when the sensors are active
       pedestrianReduceGreenTime2 = pedestrianReduceGreenTime2 + lightGreen2IncreaseWhenSensors + getTimeForCO2Sensor();
       sendNotificationToSerial("Semaforo 2 con prioridad");
-      Serial.println(greenTime2);
       display.setCursor(0, 1);
       display.print("Prio ");
       display.print(lastLight2TotalSensors);
@@ -469,7 +465,6 @@ void setPedestrian1Pulser() {
     if (vP1 == HIGH) {
       pedestrian1WaitingForPriority = true;
       isExternalRequestingLights = true;
-      sendNotificationToSerial("Peaton 1 esperando prioridad");
       //remaining time
       unsigned long remainingGreenTime1 = greenTime1 - (millis() - timeStamp);
       if (remainingGreenTime1 > pedestrianReduceGreenTime1) {
@@ -515,7 +510,6 @@ void setPedestrian2Pulser() {
     if (vP2 == HIGH) {
       pedestrian2WaitingForPriority = true;
       isExternalRequestingLights = true;
-      sendNotificationToSerial("Peaton 2 esperando prioridad");
       //If the remaining time for the light 2 is greather than the pedestrianReduceGreenTime2, we reduce the waiting time.
       //TODO: Check the sensors and the CO2 emmiter. this for high level
       unsigned long remainingGreenTime2 = greenTime2 - (millis() - timeStamp);

@@ -104,7 +104,7 @@
     <div id="log"></div>
 
     <script>
-        const socketUrl = "wss://ws.davinsony.com/smartcity";
+        const socketUrl = "wss://ws.davinsony.com/metropolitana";
         const socket = new WebSocket(socketUrl);
         const messageDiv = document.getElementById("message");
         const logDiv = document.getElementById("log");
@@ -121,7 +121,7 @@
             const colombiaTime = new Date().toLocaleString("en-US", {
                 timeZone: "America/New_York"
             })
-            return colombiaTime.toISOString().slice(0, 19).replace('T', ' '); // yyyy-mm-dd hh:mm:ss
+            return colombiaTime.slice(0, 19).replace('T', ' '); // yyyy-mm-dd hh:mm:ss
         }
 
         // Función para agregar mensajes al log
@@ -163,7 +163,7 @@
                     messageDiv.textContent = ""; // Limpiar la pantalla después del mensaje
                     isDisplaying = false;
                     resolve();
-                }, 5000); // Duración de la animación (15s)
+                }, 1000); // Duración de la animación (1s)
             });
 
             // Procesar el siguiente mensaje
@@ -207,8 +207,10 @@
             // Procesar la cola
             processQueue();
 
+
+            // Validar si el mensaje contiene la clave nightMode
             if (elementData.key === "nightMode") {
-                const value = parseInt(data.value);
+                const value = parseInt(elementData.value, 10);
                 if (value === 1) {
                     document.body.classList.remove("light-mode");
                     document.body.classList.add("dark-mode");
