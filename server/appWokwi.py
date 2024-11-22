@@ -27,6 +27,11 @@ def get_serial_connection():
         print(f"Error al conectar al puerto serial: {e}")
         return None
 
+@app.route("/realtimes")
+def realtime():
+    data = []
+    return render_template("real.html", data=data)
+
 # Configura los datos iniciales
 @app.route("/")
 def index():
