@@ -665,7 +665,7 @@ int getTimeForCO2Sensor() {
   }
 
   float time = (co2GreenTime2 * dCO2 / 10000);
-  if (dCO2 > 410) {
+  if (dCO2 > 415) {
     sendNotificationToSerial("Alto nivel de CO2");
   }
   return (int)(fmod(time, co2GreenTime2));
