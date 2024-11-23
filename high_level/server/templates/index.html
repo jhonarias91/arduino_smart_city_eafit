@@ -47,9 +47,9 @@
             border-bottom: 1px solid #ddd;
         }
         
-        tr:hover {
+        /* tr:hover {
             background-color: #f1f1f1;
-        }
+        } */
         
         td input {
             width: 100%;
@@ -88,10 +88,10 @@
             const messageTest = {msg:`${name}:${value}`, to:maquetaSelector, from:'metropolitana'};
             sendMessage(messageTest);
 
-            const data = {
-                name: name,
-                value: value.toString()
-            };
+            // const data = {
+            //     name: name,
+            //     value: value.toString()
+            // };
 
             // const response = await fetch("/update", {
             //     method: "POST",
@@ -162,8 +162,10 @@
         if (socket23.readyState === WebSocket.OPEN) {
             socket23.send(JSON.stringify(messageTest));
             //console.log('Message dispatched:', messageTest);
+            alert(`Dato enviado correctamente`);
         } else {
-            console.error('Cannot send message: WebSocket is not open.');
+            alert(`Error al enviar el dato`);
+            // console.error('Cannot send message: WebSocket is not open.');
         }
     }
 
