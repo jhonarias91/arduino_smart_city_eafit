@@ -19,6 +19,13 @@
             color: #4CAF50;
             margin: 20px 0;
         }
+        .control-panel {
+            width: 80%;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
         table {
             width: 80%;
@@ -73,9 +80,13 @@
     </style>
     <script>
         async function sendData(id) {
+            const maquetaSelector = document.getElementById("maquetaSelector").value;
             const row = document.querySelector(`tr[data-id='${id}']`);
             const name = row.querySelector(".name").innerText;
             const value = row.querySelector(".value input").value;
+
+            const messageTest = {msg:`${name}:${value}`, to:maquetaSelector, from:'metropolitana'};
+            sendMessage(messageTest);
 
             const data = {
                 name: name,
@@ -101,6 +112,14 @@
 
 <body>
     <h1>Smart City Control Panel</h1>
+    <div class="control-panel">
+        <label for="maquetaSelector">Seleccione la maqueta:</label>
+        <select id="maquetaSelector">
+            <option value="id23">Maqueta 1 (23)</option>
+            <option value="id24">Maqueta 2 (24)</option>
+            <option value="id25">Maqueta 3 (25)</option>
+        </select>
+    </div>
     <table>
         <thead>
             <tr>
@@ -125,5 +144,35 @@
         &copy; 2024 Smart City Project
     </footer>
 </body>
+<script>
+    const socketUrl23 = "wss://ws.davinsony.com/id23";
+    const socket23 = new WebSocket(socketUrl23);
 
+    socket23.addEventListener("open", () => {
+        console.log("Connection established with socket23 server");
+        socket23.send(
+            JSON.stringify({
+                action: "subscribe",
+                channel: "my_channel"
+            })
+        );
+    });
+
+    function sendMessage(messageTest) {
+        if (socket23.readyState === WebSocket.OPEN) {
+            socket23.send(JSON.stringify(messageTest));
+            //console.log('Message dispatched:', messageTest);
+        } else {
+            console.error('Cannot send message: WebSocket is not open.');
+        }
+    }
+
+    socket23.addEventListener("error", (error) => {
+        console.error("WebSocket connection error:", error);
+    });
+
+    socket23.addEventListener("close", (event) => {
+        const closeMessage = "Connection closed";
+    });
+</script>
 </html>
