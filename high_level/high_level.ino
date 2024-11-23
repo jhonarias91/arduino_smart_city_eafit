@@ -462,7 +462,7 @@ void checkForLigh2ActiveSensors() {
 
 void setPedestrian1Pulser() {
   vP1 = digitalRead(P1);
-  if (!p1IsCrossing && !p2IsCrossing && vP1 == HIGH && !pedestrian2WaitingForPriority) {  //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
+  if (!p1IsCrossing && !p2IsCrossing && vP1 == HIGH && !pedestrian1WaitingForPriority) {  //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
     sendNotificationToSerial("Peaton 1 solicitando prioridad");
     pedestrian1WaitingForPriority = true;
     isExternalRequestingLights = true;

@@ -15,18 +15,18 @@
             flex-direction: column;
             align-items: center;
         }
-
+        
         thead {
             background-color: #4CAF50;
             color: white;
         }
-
+        
         h1 {
             text-align: center;
             color: #4CAF50;
             margin: 20px 0;
         }
-
+        
         #tunnel {
             position: relative;
             width: 100%;
@@ -38,7 +38,7 @@
             background: linear-gradient(to bottom, #111, #333);
             margin-top: 20px;
         }
-
+        
         #message {
             position: absolute;
             white-space: nowrap;
@@ -50,7 +50,7 @@
             letter-spacing: 0.1rem;
             text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00;
         }
-
+        
         #log {
             margin-top: 20px;
             width: 100%;
@@ -65,13 +65,78 @@
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.875rem;
         }
-
+        
         .log-item {
             margin-bottom: 5px;
             font-size: 1rem;
         }
-
+        
+        .street-light {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 50px;
+            height: 150px;
+            background: #444;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .street-light .light {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 10px 0;
+        }
+        
+        .light.red {
+            background: red;
+        }
+        
+        .light.yellow {
+            background: yellow;
+        }
+        
+        .light.green {
+            background: green;
+        }
+        
+        .street-light-label {
+            font-size: 0.75rem;
+            color: black;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        #street-light-left {
+            top: 50%;
+            left: 5%;
+            transform: translateY(-50%);
+        }
+        
+        #street-light-right {
+            top: 50%;
+            right: 5%;
+            transform: translateY(-50%);
+        }
+        
+        #clear-log-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        #clear-log-button:hover {
+            background-color: #45a049;
+        }
         /* Animación para desplazar el mensaje */
+        
         @keyframes scroll-left {
             0% {
                 transform: translateX(100%);
@@ -80,12 +145,12 @@
                 transform: translateX(-100%);
             }
         }
-
+        
         body.dark-mode {
             background-color: #121212;
             color: #ffffff;
         }
-
+        
         body.light-mode {
             background-color: #f4f4f9;
             color: #000000;
@@ -102,6 +167,22 @@
     </div>
     <div id="log"></div>
 
+    <button id="clear-log-button">Clear Log</button>
+
+    <div id="street-light-left" class="street-light">
+        <div class="light red"></div>
+        <div class="light yellow"></div>
+        <div class="light green"></div>
+        <div class="street-light-label">Semáforo 1</div>
+    </div>
+
+    <div id="street-light-right" class="street-light">
+        <div class="light red"></div>
+        <div class="light yellow"></div>
+        <div class="light green"></div>
+        <div class="street-light-label">Semáforo 2</div>
+    </div>
+
     <script>
         const socketUrl = "wss://ws.davinsony.com/metropolitana";
         const socket = new WebSocket(socketUrl);
@@ -110,8 +191,17 @@
 
         const messageQueue = []; // Cola de mensajes
         const logMessages = []; // Para almacenar logs con fecha
-        const maxLogMessages = 100; // Limitar a 100 mensajes en el log
+        const maxLogMessages = 15; // Limitar a 100 mensajes en el log
         let isDisplaying = false; // Controla si se está mostrando un mensaje
+
+        const clearLogButton = document.getElementById("clear-log-button");
+
+        // Evento para limpiar el contenido del log
+        clearLogButton.addEventListener("click", () => {
+            logDiv.innerHTML = ""; // Limpiar el log
+            logMessages = []; // Limpiar el array de mensajes
+            messageQueu.length = 0; // Limpiar la cola de mensajes
+        });
 
         // Función para obtener la fecha y hora formateada en Colombia (UTC-5)
         function formatDate() {
