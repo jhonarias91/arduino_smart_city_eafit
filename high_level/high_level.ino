@@ -363,7 +363,8 @@ void checkForLigh1ActiveSensors() {
       totalTimesWhenLight1Priority = totalSensors;
       //With this we can increase the green reduce time when the sensors are active
       pedestrianReduceGreenTime1 = pedestrianReduceGreenTime1 + lightGreen1IncreaseWhenSensors;
-      sendNotificationToSerial("Semaforo 1 Preparando  prioridad");
+      //Show Semaforo 1 prioridad + totalSensors
+      sendNotificationToSerial("Semaforo 1 prioridad "+ totalSensors);
     }
   }
 
