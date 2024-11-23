@@ -138,8 +138,8 @@ LiquidCrystal_I2C display(0x27, 20, 4);
 //CO2
 int vCO2 = 0;
 const float DC_GAIN = 8.5;                                                                  // define the DC gain of amplifier CO2 sensor
-const float ZERO_POINT_VOLTAGE = 0.265;                                                     // define the output of the sensor in volts when the concentration of CO2 is 400PPM
-const float REACTION_VOLTAGE = 0.059;                                                       // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
+const float ZERO_POINT_VOLTAGE = 0.005;                                                     // define the output of the sensor in volts when the concentration of CO2 is 400PPM
+const float REACTION_VOLTAGE = 0.030;                                                       // define the “voltage drop” of the sensor when move the sensor from air into 1000ppm CO2
 const float CO2Curve[3] = { 2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.602 - 3)) };  // Line curve with 2 points
 
 float volts = 0;  // Variable to store current voltage from CO2 sensor
@@ -222,13 +222,13 @@ void sendDataToServer() {
 }
 
 void sendVariableToSerial(const char* key, int value) {
-    char buffer[80]; // Ensure the buffer is large enough
+    char buffer[100]; // Ensure the buffer is large enough
     snprintf(buffer, sizeof(buffer), "%s_%s:%d", ID, key, value); // Use snprintf for safety
     Serial.println(buffer); // Directly send the char buffer
 }
 
 void sendNotificationToSerial(const char* value) {
-    char buffer[80]; // Ensure the buffer is large enough
+    char buffer[100]; // Ensure the buffer is large enough
     snprintf(buffer, sizeof(buffer), "%s_%s", ID, value); // Use snprintf for safety
     Serial.println(buffer); // Directly send the char buffer
 }
@@ -659,6 +659,9 @@ int getTimeForCO2Sensor() {
   }
 
   float time = (co2GreenTime2 * dCO2 / 10000);
+  if (dCO2 > 410) {
+    sendNotificationToSerial("Alto nivel de CO2");
+  }
   return (int)(fmod(time, co2GreenTime2));
 }
 
