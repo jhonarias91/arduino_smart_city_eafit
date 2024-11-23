@@ -566,7 +566,8 @@ void readAllData() {
   } else {
     dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
   }
-
+  vP1 = digitalRead(P1);
+  vP2 = digitalRead(P2);
   vCNY1 = digitalRead(CNY1);
   vCNY2 = digitalRead(CNY2);
   vCNY3 = digitalRead(CNY3);
@@ -584,15 +585,20 @@ void showDataInDisplay() {
   display.setCursor(0, 2);
   display.print("CO2           CNY456");
   display.setCursor(0, 3);
-  display.print("L1   L2            ");
+  display.print("L    L            ");
   display.setCursor(5, 0);
   display.print(vLDR1);
   display.setCursor(5, 1);
   display.print(vLDR2);
-  display.setCursor(4, 2);
-  display.print(vCO2);
+  // display.setCursor(4, 2);
+  // display.print(vCO2);
   display.setCursor(8, 2);
-  display.print(getTimeForCO2Sensor());
+  int intCO2 = (int)dCO2;
+  display.print(intCO2);
+  display.setCursor(1, 3);
+  display.print(1 * vP1);
+  display.setCursor(6, 3);
+  display.print(1 * vP2);
   showGreenTimes();
   display.setCursor(17, 1);
   display.print(1 * vCNY1);
@@ -665,11 +671,10 @@ int getTimeForCO2Sensor() {
   } else {
     dCO2 = pow(10, ((volts / DC_GAIN) - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
   }
-
-  float time = (co2GreenTime2 * dCO2 / 10000);
-  if (dCO2 > 415) {
+  if (dCO2 > 420) {
     sendNotificationToSerial("Alto nivel de CO2");
   }
+  float time = (co2GreenTime2 * dCO2 / 10000);
   return (int)(fmod(time, co2GreenTime2));
 }
 
