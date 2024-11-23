@@ -367,6 +367,7 @@ void checkForLigh1ActiveSensors() {
       //With this we can increase the green reduce time when the sensors are active
       pedestrianReduceGreenTime1 = pedestrianReduceGreenTime1 + lightGreen1IncreaseWhenSensors;
       sendNotificationToSerial("Semaforo 1 prioridad");
+      
     }
   }
 
@@ -547,9 +548,8 @@ void setPedestrian2Pulser() {
   //After the time had been reach, we set the original time again
   if (p2IsCrossing && previousStatePedestrian2 == STATE_LIGHT1_GREEN_ON_START && state != STATE_LIGHT1_GREEN_ON_START) {
     p2IsCrossing = false;
-    greenTime2 =
-      //Set the greentime1 to the original value after the pedestrian has crossed
-      greenTime1 = originalGreen1Time;
+    //Set the greentime1 to the original value after the pedestrian has crossed
+    greenTime1 = originalGreen1Time;
     isExternalRequestingLights = false;
     sendNotificationToSerial("Gracias por cuidarte!");
   }

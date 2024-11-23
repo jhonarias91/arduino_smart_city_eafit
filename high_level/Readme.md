@@ -117,7 +117,7 @@ la maqueta.
 | 3   | yellowTime                        | 500    | Tiempo asignado en milisegundos para la luz amarilla.                                            |
 | 4   | blinkTime                         | 100    | Tiempo de parpadeo en milisegundos para la luz verde intermitente.                               |
 | 5   | totalBlinksInOut                  | 6      | Número total de parpadeos durante el ciclo de luz verde intermitente.                           |
-| 6   | pedestrianCrossTime               | 10000  | Tiempo asignado en milisegundos para el cruce de peatones en el semaforo 1.                                       |
+| 6   | pedestrian1CrossTime               | 10000  | Tiempo asignado en milisegundos para el cruce de peatones en el semaforo 1.                                       |
 | 7   | pedestrianReduceGreenTime1        | 3000   | Reducción del tiempo de la luz verde 1 para permitir el cruce de peatones.                      |
 | 8  | co2GreenTime2                      | 20000   | Tiempo asignado para la luz verde 2 variable según el nivel de CO2.                              |
 | 9   | lightGreen2IncreaseWhenSensors    | 2000   | Incremento del tiempo para la luz verde 2 cuando algún sensor detecta actividad.                   |

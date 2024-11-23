@@ -52,7 +52,7 @@ def index():
     {"id": 3, "name": "yellowTime", "value": "500"},
     {"id": 4, "name": "blinkTime", "value": "100"},
     {"id": 5, "name": "totalBlinksInOut", "value": "6"},
-    {"id": 6, "name": "pedestrianCrossTime", "value": "10000"},
+    {"id": 6, "name": "pedestrian1CrossTime", "value": "10000"},
     {"id": 7, "name": "pedestrianReduceGreenTime1", "value": "3000"},
     {"id": 8, "name": "co2GreenTime2", "value": "20000"},
     {"id": 9, "name": "lightGreen2IncreaseWhenSensors", "value": "2000"},    
