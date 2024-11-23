@@ -33,13 +33,14 @@ const int STATE_LIGHT_RED1_ON = 3;          // Traffic light 1 red light on
 const int STATE_LIGHT2_GREEN_ON = 4;        // Traffic light 2 green light on
 const int STATE_LIGHT2_GREEN_BLINK = 5;     // Traffic light 2 green light blinking
 const int STATE_LIGHT2_YELLOW_ON = 6;       // Traffic light 2 yellow light on
-const int STATE_LIGHT_NIGHT_MODE = 7;       // Night mode where light 2 has the priority
+const int STATE_LIGHT_RED2_ON = 7;       // Traffic light 2 yellow light on
+const int STATE_LIGHT_NIGHT_MODE = 8;       // Night mode where light 2 has the priority
 
 const int LIGHT2_INCREASE_WHEN3_SENSORS = 2000;
 const int LIGHT2_INCREASE_WHEN2_SENSORS = 1000;
 const int ALL_SENSORS_ACTIVE = 3;
 const int TWO_SENSORS_ACTIVE = 2;
-const int LAST_SENSOR_TIME_CHECKER = 10;
+const int LAST_SENSOR_TIME_CHECKER = 100;
 
 int originalGreen2Time = 4000;  //No as a contast to be able to change using serial
 int originalGreen1Time = 2000;
@@ -125,7 +126,7 @@ long unsigned lastPriorityTimeOnLight1 = 0;        // Last time Light 1 had prio
 long unsigned priorityWaitingTimeOnLight1 = 3000;  // Time to wait before giving priority again
 long unsigned light1PriorityTimeStamp = 0;
 
-int lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when sensors are active
+long lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when sensors are active
 
 //#### End sensors light 2 ###
 
@@ -324,6 +325,7 @@ void setNotificationWaitingTime() {
 
 void checkNighMode() {
   nightTimeStampCheck = millis();
+  
   if ((nightTimeStampCheck - lightSensorTimeStamp > lightSensorsCheckTime) && !isExternalRequestingLights) {
     lightSensorTimeStamp = nightTimeStampCheck;
 
@@ -413,9 +415,9 @@ void checkForLigh2ActiveSensors() {
 
     int totalSensors = 3 - (vCNY4 + vCNY5 + vCNY6);
 
-
+    //When night mode is active not need to give priority
     if (totalSensors > 0 && !light2IsPriority && !light2WaitingForGreenStatus
-        && currTime - lastPriorityTimeOnLight2 > priorityWaitingTimeOnLight2) {
+        && currTime - lastPriorityTimeOnLight2 > priorityWaitingTimeOnLight2 && !nightMode ) {
       light2WaitingForGreenStatus = true;
       lastLight2TotalSensors = totalSensors;
       isExternalRequestingLights = true;
@@ -768,17 +770,32 @@ void trafficLightFSM() {
 
     case STATE_LIGHT2_YELLOW_ON:
       // Turn on yellow light for traffic light 2
+      digitalWrite(LR1, HIGH); //THIS
       digitalWrite(LG2, LOW);
       digitalWrite(LY2, HIGH);
 
       // Transition directly to the start of the cycle
+      if (millis() - timeStamp > yellowTime) {
+        state = STATE_LIGHT_RED2_ON;
+        timeStamp = millis();
+        sendVariableToSerial("state", state);
+      }
+      break;
+   case STATE_LIGHT_RED2_ON:
+      // Turn on red light for traffic light 1 and yellow for traffic light 2
+      digitalWrite(LR1, LOW);
+      digitalWrite(LY1, HIGH);
+      digitalWrite(LY2, LOW);
+      digitalWrite(LG2, LOW);
+      digitalWrite(LR2, HIGH);
+
+      // Transition to green light for traffic light 2
       if (millis() - timeStamp > yellowTime) {
         state = STATE_LIGHT1_GREEN_ON_START;
         timeStamp = millis();
         sendVariableToSerial("state", state);
       }
       break;
-
     case STATE_LIGHT_NIGHT_MODE:
       // Alternate blinking for night mode
       digitalWrite(LG2, HIGH);
