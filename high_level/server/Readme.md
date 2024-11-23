@@ -8,7 +8,7 @@ Create enviroment
 python -m venv venv
 
 venv/Scripts/activate
-pip install flash pyserial mysql-connector-python
+pip install flask pyserial mysql-connector-python websocket-client
 
 
 Make sure to close the arduino Serial Monitor.

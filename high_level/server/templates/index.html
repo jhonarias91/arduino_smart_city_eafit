@@ -93,19 +93,19 @@
                 value: value.toString()
             };
 
-            const response = await fetch("/update", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data),
-            });
+            // const response = await fetch("/update", {
+            //     method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json"
+            //     },
+            //     body: JSON.stringify(data),
+            // });
 
-            if (response.ok) {
-                alert(`Dato enviado correctamente: ${name} = ${value}`);
-            } else {
-                alert(`Error al enviar el dato: ${name}`);
-            }
+            // if (response.ok) {
+            //     alert(`Dato enviado correctamente: ${name} = ${value}`);
+            // } else {
+            //     alert(`Error al enviar el dato: ${name}`);
+            // }
         }
     </script>
 </head>

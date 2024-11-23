@@ -15,18 +15,18 @@
             flex-direction: column;
             align-items: center;
         }
-        
+
         thead {
             background-color: #4CAF50;
             color: white;
         }
-        
+
         h1 {
             text-align: center;
             color: #4CAF50;
             margin: 20px 0;
         }
-        
+
         #tunnel {
             position: relative;
             width: 100%;
@@ -38,7 +38,7 @@
             background: linear-gradient(to bottom, #111, #333);
             margin-top: 20px;
         }
-        
+
         #message {
             position: absolute;
             white-space: nowrap;
@@ -50,7 +50,7 @@
             letter-spacing: 0.1rem;
             text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00;
         }
-        
+
         #log {
             margin-top: 20px;
             width: 100%;
@@ -64,15 +64,14 @@
             box-shadow: 0 0 10px #222;
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.875rem;
-            /* Reducido el tamaño de la fuente */
         }
-        
+
         .log-item {
             margin-bottom: 5px;
             font-size: 1rem;
         }
+
         /* Animación para desplazar el mensaje */
-        
         @keyframes scroll-left {
             0% {
                 transform: translateX(100%);
@@ -81,12 +80,12 @@
                 transform: translateX(-100%);
             }
         }
-        
+
         body.dark-mode {
             background-color: #121212;
             color: #ffffff;
         }
-        
+
         body.light-mode {
             background-color: #f4f4f9;
             color: #000000;
@@ -116,12 +115,10 @@
 
         // Función para obtener la fecha y hora formateada en Colombia (UTC-5)
         function formatDate() {
-            const now = new Date();
-
             const colombiaTime = new Date().toLocaleString("en-US", {
-                timeZone: "America/New_York"
-            })
-            return colombiaTime.slice(0, 19).replace('T', ' '); // yyyy-mm-dd hh:mm:ss
+                timeZone: "America/Bogota"
+            });
+            return colombiaTime.replace(",", ""); // yyyy-mm-dd hh:mm:ss
         }
 
         // Función para agregar mensajes al log
@@ -155,16 +152,12 @@
             isDisplaying = true;
 
             const message = messageQueue.shift(); // Obtener el siguiente mensaje
-            displayMessage(message);
+            await displayMessage(message); // Mostrar el mensaje con la animación
 
-            await new Promise((resolve) => {
-                // Esperar el tiempo de la animación antes de procesar el siguiente mensaje
-                setTimeout(() => {
-                    messageDiv.textContent = ""; // Limpiar la pantalla después del mensaje
-                    isDisplaying = false;
-                    resolve();
-                }, 4000); // Duración de la animación (1s)
-            });
+            // Registrar el mensaje en el log después de haber sido mostrado
+            addLogMessage(message);
+
+            isDisplaying = false;
 
             // Procesar el siguiente mensaje
             processQueue();
@@ -172,13 +165,22 @@
 
         // Función para mostrar un mensaje en el display
         function displayMessage(message) {
-            messageDiv.textContent = message;
+            return new Promise((resolve) => {
+                messageDiv.textContent = message;
 
-            // Reiniciar animación
-            messageDiv.style.animation = "none";
-            setTimeout(() => {
-                messageDiv.style.animation = ""; // Volver a activar la animación
-                messageDiv.style.animation = "scroll-left 4s linear 1";
+                // Reiniciar la animación
+                messageDiv.style.animation = "none";
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        messageDiv.style.animation = "scroll-left 4s linear 1";
+                    });
+                });
+
+                // Esperar a que termine la animación antes de resolver
+                setTimeout(() => {
+                    messageDiv.textContent = ""; // Limpiar la pantalla después del mensaje
+                    resolve();
+                }, 4000); // Duración de la animación (4s)
             });
         }
 
@@ -196,8 +198,8 @@
 
         socket.addEventListener("message", (event) => {
             const elementData = JSON.parse(event.data);
-            const receivedMessage = "[" + elementData.from + "] "+elementData.msg;
-           
+            const receivedMessage = "[" + elementData.from + "] " + elementData.msg;
+
             // Validar si el mensaje contiene la clave nightMode
             if (elementData.key === "nightMode") {
                 const value = parseInt(elementData.value, 10);
@@ -211,9 +213,6 @@
             } else {
                 // Agregar el mensaje a la cola
                 messageQueue.push(receivedMessage);
-
-                // Registrar el mensaje en el log
-                addLogMessage(receivedMessage);
 
                 // Procesar la cola
                 processQueue();
