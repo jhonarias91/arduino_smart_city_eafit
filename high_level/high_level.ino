@@ -191,6 +191,7 @@ void setup() {
 void loop() {
   trafficLightFSM();
   setPedestrian1Pulser();
+  setPedestrian2Pulser();
   checkForLigh1ActiveSensors();
   checkForLigh2ActiveSensors();
   checkNighMode();
@@ -508,11 +509,16 @@ void setPedestrian2Pulser() {
   vP2 = digitalRead(P2);
   if (!p1IsCrossing && !p2IsCrossing) {  //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
     if (vP2 == HIGH) {
+      sendNotificationToSerial("Peaton 2 esperando");
       pedestrian2WaitingForPriority = true;
       isExternalRequestingLights = true;
       //If the remaining time for the light 2 is greather than the pedestrianReduceGreenTime2, we reduce the waiting time.
       //TODO: Check the sensors and the CO2 emmiter. this for high level
       unsigned long remainingGreenTime2 = greenTime2 - (millis() - timeStamp);
+      
+      if (nightMode){
+        nightMode = false;
+      }      
       if (remainingGreenTime2 > pedestrianReduceGreenTime2) {       
         lastGreenTime2 = greenTime2;
         greenTime2 = pedestrianReduceGreenTime2;
