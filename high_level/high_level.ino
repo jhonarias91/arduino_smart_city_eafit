@@ -22,9 +22,7 @@ const char* ID = "id23";  //ID to identify the device
 #define CO2 A2   // CO2 sensor connected in pin A3
 
 //End middle level
-
 //Constants
-
 
 // States of the finite state machine (FSM)
 const int STATE_LIGHT1_GREEN_ON_START = 0;  // Traffic light 1 green light on at start and light 2 red on
@@ -464,7 +462,7 @@ void checkForLigh2ActiveSensors() {
 
 void setPedestrian1Pulser() {
   vP1 = digitalRead(P1);
-  if (!p1IsCrossing && !p2IsCrossing && vP2 == HIGH && !pedestrian2WaitingForPriority) {  //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
+  if (!p1IsCrossing && !p2IsCrossing && vP1 == HIGH && !pedestrian2WaitingForPriority) {  //Not need to add isExternalRequestingLights because we want to switch fast to this when requested.
     sendNotificationToSerial("Peaton 1 solicitando prioridad");
     pedestrian1WaitingForPriority = true;
     isExternalRequestingLights = true;
