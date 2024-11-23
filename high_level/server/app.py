@@ -6,8 +6,8 @@ import threading
 import time
 import mysql.connector
 
+#http://192.168.166.214:5000/realtimes
 # Configuración del puerto serial RFC2217
-#SERIAL_URL = 'rfc2217://localhost:4000'
 SERIAL_PORT = "COM5"
 SERIAL_BAUDRATE = 115200
 id = "id23" #This will be update every mesage
@@ -155,7 +155,7 @@ def run_websocket():
 
 # Hilo para ejecutar Flask
 def run_flask():
-    app.run(debug=True, use_reloader=False, host="127.0.0.1", port=5000)
+    app.run(debug=True, use_reloader=False, host="0.0.0.0",port=5000)
 
 # Configuración de la conexión a MySQL
 db_config = {
