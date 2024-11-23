@@ -590,7 +590,7 @@ void showDataInDisplay() {
   display.print(vLDR2);
   // display.setCursor(4, 2);
   // display.print(vCO2);
-  display.setCursor(8, 2);
+  display.setCursor(5, 2);
   int intCO2 = (int)dCO2;
   display.print(intCO2);
   display.setCursor(1, 3);
