@@ -196,18 +196,8 @@
 
         socket.addEventListener("message", (event) => {
             const elementData = JSON.parse(event.data);
-            const receivedMessage = elementData.msg;
-
-            // Agregar el mensaje a la cola
-            messageQueue.push(receivedMessage);
-
-            // Registrar el mensaje en el log
-            addLogMessage(receivedMessage);
-
-            // Procesar la cola
-            processQueue();
-
-
+            const receivedMessage = "[" + elementData.from + "] "+elementData.msg;
+           
             // Validar si el mensaje contiene la clave nightMode
             if (elementData.key === "nightMode") {
                 const value = parseInt(elementData.value, 10);
@@ -218,6 +208,15 @@
                     document.body.classList.remove("dark-mode");
                     document.body.classList.add("light-mode");
                 }
+            } else {
+                // Agregar el mensaje a la cola
+                messageQueue.push(receivedMessage);
+
+                // Registrar el mensaje en el log
+                addLogMessage(receivedMessage);
+
+                // Procesar la cola
+                processQueue();
             }
         });
 
