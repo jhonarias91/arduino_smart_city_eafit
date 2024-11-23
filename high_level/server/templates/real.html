@@ -304,65 +304,6 @@
                     document.body.classList.add("light-mode");
                 }
 
-            } else if (elementData.key === "state") {
-                const state = parseInt(elementData.value, 10);
-
-                // Reset all lights first
-                const resetLights = () => {
-                    document.querySelectorAll(".light").forEach(light => light.style.backgroundColor = "gray");
-                };
-
-                // Apply specific state logic
-                resetLights(); // Turn off all lights before setting new state
-                switch (state) {
-                    case 0: // STATE_LIGHT1_GREEN_ON_START
-                        document.querySelector("#street-light-left .light.green").style.backgroundColor = "green";
-                        document.querySelector("#street-light-right .light.red").style.backgroundColor = "red";
-                        break;
-                    case 1: // STATE_LIGHT1_GREEN_BLINK
-                        let blinkInterval = setInterval(() => {
-                            const light = document.querySelector("#street-light-left .light.green");
-                            light.style.backgroundColor = light.style.backgroundColor === "green" ? "gray" : "green";
-                        }, 500); // Blink every 500ms
-                        setTimeout(() => clearInterval(blinkInterval), 5000); // Stop blinking after 5s
-                        break;
-                    case 2: // STATE_LIGHT1_YELLOW_ON
-                        document.querySelector("#street-light-left .light.yellow").style.backgroundColor = "yellow";
-                        break;
-                    case 3: // STATE_LIGHT_RED1_ON
-                        document.querySelector("#street-light-left .light.red").style.backgroundColor = "red";
-                        document.querySelector("#street-light-right .light.yellow").style.backgroundColor = "yellow";
-                        break;
-                    case 4: // STATE_LIGHT2_GREEN_ON
-                        document.querySelector("#street-light-right .light.green").style.backgroundColor = "green";
-                        break;
-                    case 5: // STATE_LIGHT2_GREEN_BLINK
-                        let blinkInterval2 = setInterval(() => {
-                            const light = document.querySelector("#street-light-right .light.green");
-                            light.style.backgroundColor = light.style.backgroundColor === "green" ? "gray" : "green";
-                        }, 500); // Blink every 500ms
-                        setTimeout(() => clearInterval(blinkInterval2), 5000); // Stop blinking after 5s
-                        break;
-                    case 6: // STATE_LIGHT2_YELLOW_ON
-                        document.querySelector("#street-light-right .light.yellow").style.backgroundColor = "yellow";
-                        break;
-                    case 7: // STATE_LIGHT_RED2_ON
-                        document.querySelector("#street-light-left .light.red").style.backgroundColor = "red";
-                        document.querySelector("#street-light-right .light.red").style.backgroundColor = "red";
-                        break;
-                    case 8: // STATE_LIGHT_NIGHT_MODE
-                        setInterval(() => {
-                            const leftYellow = document.querySelector("#street-light-left .light.yellow");
-                            const rightYellow = document.querySelector("#street-light-right .light.yellow");
-                            leftYellow.style.backgroundColor = leftYellow.style.backgroundColor === "yellow" ? "gray" : "yellow";
-                            rightYellow.style.backgroundColor = rightYellow.style.backgroundColor === "yellow" ? "gray" : "yellow";
-                        }, 500); // Both blink every 500ms in night mode
-                        break;
-                    default:
-                        console.error("Unknown state received:", state);
-                }
-
-
             } else {
                 // Agregar el mensaje a la cola
                 messageQueue.push(receivedMessage);

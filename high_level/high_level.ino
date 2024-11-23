@@ -221,6 +221,9 @@ void sendDataToServer() {
     sendVariableToSerial("co2GreenTime2", co2GreenTime2);
   }
 }
+void intToStr(const char* key, int value, char* resultBuffer, size_t bufferSize) {
+    snprintf(resultBuffer, bufferSize, "%s %d", key, value);
+}
 
 void sendVariableToSerial(const char* key, int value) {
   char buffer[100];                                              // Ensure the buffer is large enough
@@ -363,8 +366,7 @@ void checkForLigh1ActiveSensors() {
       totalTimesWhenLight1Priority = totalSensors;
       //With this we can increase the green reduce time when the sensors are active
       pedestrianReduceGreenTime1 = pedestrianReduceGreenTime1 + lightGreen1IncreaseWhenSensors;
-      //Show Semaforo 1 prioridad + totalSensors
-      sendNotificationToSerial("Semaforo 1 prioridad "+ totalSensors);
+      sendNotificationToSerial("Semaforo 1 prioridad");
     }
   }
 

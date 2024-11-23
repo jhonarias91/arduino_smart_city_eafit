@@ -19,6 +19,7 @@
             color: #4CAF50;
             margin: 20px 0;
         }
+        
         .control-panel {
             width: 80%;
             margin: 0 auto 20px;
@@ -46,7 +47,6 @@
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        
         /* tr:hover {
             background-color: #f1f1f1;
         } */
@@ -85,7 +85,11 @@
             const name = row.querySelector(".name").innerText;
             const value = row.querySelector(".value input").value;
 
-            const messageTest = {msg:`${name}:${value}`, to:maquetaSelector, from:'metropolitana'};
+            const messageTest = {
+                msg: `${name}:${value}`,
+                to: maquetaSelector,
+                from: 'metropolitana'
+            };
             sendMessage(messageTest);
 
             // const data = {
@@ -113,11 +117,11 @@
 <body>
     <h1>Smart City Control Panel</h1>
     <div class="control-panel">
-        <label for="maquetaSelector">Seleccione la maqueta:</label>
+        <label for="maquetaSelector">Seleccione Controlador:</label>
         <select id="maquetaSelector">
-            <option value="id23">Maqueta 1 (id23)</option>
-            <option value="id24">Maqueta 2 (id24)</option>
-            <option value="id25">Maqueta 3 (id25)</option>
+            <option value="id23">Controlador (id23)</option>
+            <option value="id24">Controlador (id24)</option>
+            <option value="id25">Controlador (id25)</option>
         </select>
     </div>
     <table>
@@ -177,4 +181,5 @@
         const closeMessage = "Connection closed";
     });
 </script>
+
 </html>
