@@ -124,6 +124,8 @@ def serial_to_websocket():
                             handleVariable(idValue[1])
                         else:
                             ws.send(json.dumps({"msg": idValue[1], "to": "metropolitana", "from": id}))
+                            saveNotifToDatabase(id, idValue[1])
+
             except serial.SerialException as e:
                 print(f"Error leyendo del puerto serial: {e}")
                 break
@@ -134,12 +136,11 @@ def handleVariable(keyValue):
     keyValueArray = keyValue.split(":")
     key = keyValueArray[0]
     value = keyValueArray[1]
-    saveToDatabase(id, key, value)
+    saveVarToDatabase(id, key, value)
     if key == "nightMode":
         nightmode = int(value)
         # Enviar el estado de nightMode al frontend
-        if ws:
-            ws.send(json.dumps({"msg": keyValue, "to": "metropolitana", "from": id, "key": "nightMode", "value": nightmode}))
+        ws.send(json.dumps({"msg": keyValue, "to": "metropolitana", "from": id, "key": "nightMode", "value": nightmode}))
 
 # Hilo para ejecutar WebSocket
 def run_websocket():
@@ -165,7 +166,7 @@ db_config = {
     "database": "smartcity"
 }
 
-def saveToDatabase(clientId, key, value):
+def saveVarToDatabase(clientId, key, value):
     try:
         # Establecer conexión con la base de datos
         connection = mysql.connector.connect(**db_config)
@@ -179,6 +180,28 @@ def saveToDatabase(clientId, key, value):
         connection.commit()
 
         print(f"Guardado en la base de datos: {key} -> {value}")
+    except mysql.connector.Error as err:
+        print(f"Error al guardar en la base de datos: {err}")
+    finally:
+        # Cerrar la conexión
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+def saveNotifToDatabase(clientId, notification):
+    try:
+        # Establecer conexión con la base de datos
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # Consulta SQL para insertar datos
+        query = "INSERT INTO notifications (client_id, notification) VALUES (%s, %s)"
+        cursor.execute(query, (clientId, notification))
+
+        # Confirmar la transacción
+        connection.commit()
+
+        print(f"Guardado en la base de datos: {notification}")
     except mysql.connector.Error as err:
         print(f"Error al guardar en la base de datos: {err}")
     finally:
