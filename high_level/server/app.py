@@ -114,8 +114,7 @@ def serial_to_websocket():
             try:
                 if ser.in_waiting > 0:  # Hay datos disponibles
                     line = ser.readline().decode('utf-8', errors='ignore').strip()
-                    if line:
-                        print(line);
+                    if line:                        
                         idValue = line.split("_")
                         id = idValue[0] 
                         ## check if line have :
