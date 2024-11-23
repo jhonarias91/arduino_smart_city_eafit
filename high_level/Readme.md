@@ -124,11 +124,10 @@ la maqueta.
 | 10  | priorityWaitingTimeOnLight2       | 7000   | Tiempo de espera en milisegundos antes de dar prioridad nuevamente a la luz 2.                  |
 | 11  | priorityWaitingTimeOnLight1       | 3000   | Tiempo de espera en milisegundos antes de dar prioridad nuevamente a la luz 1.                  |
 | 12  | lightGreen1IncreaseWhenSensors    | 2000   | Incremento del tiempo para la luz verde 1 cuando sensores detectan actividad.                   |
-| 13  | displayRefreshTimeAfterNotification | 4000 | Tiempo de refresco en milisegundos del display después de mostrar una notificación.             |
-| 14  | greenLight1TimeWhenCar            | 3000   | Tiempo asignado para la luz verde 1 cuando se detecta un vehículo.                              |
-| 15  | pedestrian2CrossTime            | 4000   | Tiempo asignado en milisegundos para el cruce de peatones en el semaforo 2.                              |
-| 16  | pedestrianReduceGreenTime1            | 3000   | Tiempo base al cual se reduce el tiempo del semaforo 1 en verde cuando un peatón lo solicita.                              |
-| 17  | pedestrianReduceGreenTime2            | 5000   | Tiempo base al cual se reduce el tiempo del semaforo 2 en verde cuando un peatón lo solicita.                              |
+| 13  | displayRefreshTimeAfterNotification | 4000 | Tiempo de refresco en milisegundos del display después de mostrar una notificación.             |                             |
+| 14  | pedestrian2CrossTime            | 4000   | Tiempo asignado en milisegundos para el cruce de peatones en el semaforo 2.                              |
+| 15  | pedestrianReduceGreenTime1            | 3000   | Tiempo base al cual se reduce el tiempo del semaforo 1 en verde cuando un peatón lo solicita.                              |
+| 16  | pedestrianReduceGreenTime2            | 5000   | Tiempo base al cual se reduce el tiempo del semaforo 2 en verde cuando un peatón lo solicita.                              |
 
 
 

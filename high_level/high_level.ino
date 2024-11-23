@@ -78,7 +78,6 @@ unsigned long lastGreenTime2 = greenTime2;
 
 //Infrared CNY2, when detect some car it increase the greentime, must that this is too short
 bool ligh1DetectCar = false;
-int greenLight1TimeWhenCar = 3000;
 bool ligh1CarIsCrossing = true;
 int previousState = -1;        // To ligh1 previous state
 int previousStateLight2 = -1;  // To ligh2 previous state
@@ -131,7 +130,7 @@ long lightGreen1IncreaseWhenSensors = 2000;  // Additional green time when senso
 
 int unsigned displayRefreshTime = 1000;
 int unsigned displayRefreshTimeStamp;
-int unsigned displayRefreshTimeAfterNotification = 4000;  //Time to wait until a new notification was show
+int unsigned displayRefreshTimeAfterNotification = 3000;  //Time to wait until a new notification was show
 
 LiquidCrystal_I2C display(0x27, 20, 4);
 
@@ -216,7 +215,6 @@ void sendDataToServer() {
     sendVariableToSerial("priorityWaitingTimeOnLight1", priorityWaitingTimeOnLight1);
     sendVariableToSerial("lightGreen1IncreaseWhenSensors", lightGreen1IncreaseWhenSensors);
     sendVariableToSerial("displayRefreshTimeAfterNotification", displayRefreshTimeAfterNotification);
-    sendVariableToSerial("greenLight1TimeWhenCar", greenLight1TimeWhenCar);
     sendVariableToSerial("pedestrian1CrossTime", pedestrian1CrossTime);
     sendVariableToSerial("co2GreenTime2", co2GreenTime2);
   }
@@ -284,8 +282,6 @@ void readSerial() {
           lightGreen1IncreaseWhenSensors = value;
         } else if (idStr.equalsIgnoreCase("displayRefreshTimeAfterNotification")) {
           displayRefreshTimeAfterNotification = value;
-        } else if (idStr.equalsIgnoreCase("greenLight1TimeWhenCar")) {
-          greenLight1TimeWhenCar = value;
         } else if (idStr.equalsIgnoreCase("pedestrian1CrossTime")) {
           pedestrian1CrossTime = value;
         } else if (idStr.equalsIgnoreCase("pedestrian2CrossTime")) {
@@ -299,11 +295,13 @@ void readSerial() {
         } else if (idStr.equalsIgnoreCase("co2GreenTime2")) {
           co2GreenTime2 = value;
         }
+        String trimmedIdStr = idStr.substring(0, min(15, idStr.length()));
         // Show the value
         display.setCursor(0, 3);
         display.print("                    ");  // Clean the display
         display.setCursor(0, 3);
-        display.print(idStr + ":" + value);
+
+        display.print(trimmedIdStr + ":" + value);
         setNotificationWaitingTime();
         received = "";  // Clean the buffer to receive again a new word
       } else {
@@ -366,11 +364,9 @@ void checkForLigh1ActiveSensors() {
       totalTimesWhenLight1Priority = totalSensors;
       //With this we can increase the green reduce time when the sensors are active
       pedestrianReduceGreenTime1 = pedestrianReduceGreenTime1 + lightGreen1IncreaseWhenSensors;
-      sendNotificationToSerial("Semaforo 1 prioridad");
-      
+      sendNotificationToSerial("Semaforo 1 prioridad");   
     }
   }
-
   if (light1WaitingForGreenStatus) {
     // Wait until Light 1 turns green
     if (state == STATE_LIGHT1_GREEN_ON_START) {
